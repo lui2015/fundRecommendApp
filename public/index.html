@@ -39,12 +39,19 @@
       </div>
     </section>
 
-    <!-- 心想事成 / 等待摇奖 -->
+    <!-- 结果提炼卡片 / 等待摇奖 -->
     <section class="wish-panel" id="wishPanel">
-      <div class="wish-text" id="wishText">心 想 事 成</div>
       <div class="slot-status hidden" id="slotStatus">
         <span class="slot-icon">&#127922;</span>
         <span class="status-msg" id="statusMsg">等待摇奖…</span>
+      </div>
+      <!-- 默认态：心 想 事 成 -->
+      <div class="wish-text" id="wishText">心 想 事 成</div>
+      <!-- 结果提炼态（抽签后显示，点击展开详情） -->
+      <div class="result-summary hidden" id="resultSummary">
+        <div class="summary-fund-name" id="summaryFundName"></div>
+        <div class="summary-oneliner" id="summaryOneliner"></div>
+        <div class="summary-hint">&#128270; 点击查看详情</div>
       </div>
     </section>
 
@@ -91,21 +98,34 @@
     <!-- 结果面板 -->
     <section id="resultPanel" class="result-panel hidden"></section>
 
-    <!-- 历史记录 -->
-    <section class="history-panel" id="historyPanel">
-      <div class="history-head">
-        <span>&#128220; 抽签记录</span>
-        <button class="refresh-btn" id="refreshHistory">&#8635;</button>
-      </div>
-      <ul id="historyList" class="history-list"></ul>
-    </section>
-
     <!-- 免责声明 -->
     <footer class="disclaimer">
       本结果由 AI 大模型生成，可能非实时/准确数据，仅供娱乐参考，不构成投资建议。
       基金有风险，投资需谨慎独立判断。
     </footer>
   </div>
+
+  <!-- 侧边栏（更多菜单） -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header">
+      <span class="drawer-title">更多</span>
+      <button class="drawer-close" id="drawerClose" aria-label="关闭">&times;</button>
+    </div>
+    <nav class="drawer-nav">
+      <a class="drawer-item active" id="menuHistory" href="#">
+        <span class="drawer-icon">&#128220;</span> 抽签记录
+      </a>
+    </nav>
+    <!-- 抽签记录内容区 -->
+    <section class="drawer-section" id="drawerHistorySection">
+      <div class="history-head">
+        <span>&#128220; 抽签记录</span>
+        <button class="refresh-btn" id="refreshHistory">&#8635;</button>
+      </div>
+      <ul id="historyList" class="history-list"></ul>
+    </section>
+  </aside>
 
   <!-- Toast -->
   <div class="toast" id="toast"></div>

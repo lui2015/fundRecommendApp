@@ -18,8 +18,13 @@ const slotStatus = $('#slotStatus');
 const statusMsg = $('#statusMsg');
 const digitRow = $('#digitRow');
 const resultPanel = $('#resultPanel');
+const resultSummary = $('#resultSummary');
+const summaryFundName = $('#summaryFundName');
+const summaryOneliner = $('#summaryOneliner');
 const historyList = $('#historyList');
 const toastEl = $('#toast');
+const drawer = $('#drawer');
+const drawerOverlay = $('#drawerOverlay');
 
 // ---- Toast ----
 function showToast(msg) {
@@ -86,8 +91,8 @@ function revealDigits(codeStr) {
       if (idx === codeStr.length - 1) {
         setTimeout(() => {
           slotStatus.classList.add('hidden');
-          wishText.classList.remove('hidden');
-          wishText.textContent = '心 想 事 成';
+          // 不再默认显示"心 想 事 成"，等 renderResult 后才展示提炼卡片
+          wishText.classList.add('hidden');
           // LED 全亮
           document.querySelectorAll('.led-bar .dot').forEach((d, i) => {
             setTimeout(() => d.classList.add('active'), i * 40);
@@ -111,7 +116,7 @@ function stopSpin(codeStr) {
       }
     });
     slotStatus.classList.add('hidden');
-    wishText.classList.remove('hidden');
+    wishText.classList.add('hidden'); // 等 renderResult 填充提炼卡片
     return;
   }
   revealDigits(codeStr);
@@ -136,6 +141,12 @@ async function doDraw() {
   drawBtn.disabled = true;
   resultPanel.classList.add('hidden');
   saveBtn.disabled = true;
+  // 重置提炼卡片
+  resultSummary.classList.add('hidden');
+  wishText.classList.remove('hidden');
+  wishText.textContent = '心 想 事 成';
+  wishPanel.classList.remove('has-result');
+  wishPanel.onclick = null;
 
   startSpin();
 
@@ -168,6 +179,10 @@ async function doDraw() {
     resetDigits();
     slotStatus.classList.add('hidden');
     wishText.classList.remove('hidden');
+    wishText.textContent = '心 想 事 成';
+    resultSummary.classList.add('hidden');
+    wishPanel.classList.remove('has-result');
+    wishPanel.onclick = null;
     showToast('抽签失败：' + e.message);
     state.isDrawing = false;
     drawBtn.disabled = false;
@@ -208,6 +223,26 @@ function renderResult(data) {
     reasonHtml = `<div class="reason-block"><h3>推荐说明</h3><p>${escapeHtml(raw)}</p></div>`;
   }
 
+  // 填充提炼卡片（在 wishPanel 区域）
+  const oneLiner = r ? (r.oneLiner || '') : (raw ? raw : '');
+  summaryFundName.textContent = f.name || '未知基金';
+  summaryOneliner.textContent = oneLiner || (f.type || '') + '型基金';
+  resultSummary.classList.remove('hidden');
+  wishText.classList.add('hidden');
+  wishPanel.classList.add('has-result');
+
+  // 点击提炼卡片 → 展开/收起详情面板
+  wishPanel.onclick = () => {
+    if (resultPanel.classList.contains('hidden')) {
+      resultPanel.classList.remove('hidden');
+      // 滚动到详情面板可见区域
+      setTimeout(() => resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    } else {
+      resultPanel.classList.add('hidden');
+    }
+  };
+
+  // 详情面板内容（完整数据）
   resultPanel.innerHTML = `
     <div class="res-header">
       <div class="res-tags">
@@ -318,16 +353,31 @@ async function delHistory(id) {
   } catch (e) { showToast('删除失败'); }
 }
 
+// ---- 侧边栏（更多菜单） ----
+function openDrawer() {
+  drawer.classList.add('open');
+  drawerOverlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  // 打开时加载历史
+  loadHistory();
+}
+function closeDrawer() {
+  drawer.classList.remove('open');
+  drawerOverlay.classList.remove('show');
+  document.body.style.overflow = '';
+}
+$('#menuBtn').addEventListener('click', openDrawer);
+$('#drawerClose').addEventListener('click', closeDrawer);
+drawerOverlay.addEventListener('click', closeDrawer);
+// ESC 关闭
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+
 // ---- 事件绑定 ----
 drawBtn.addEventListener('click', doDraw);
 saveBtn.addEventListener('click', () => {
   if (state.lastResult) saveResult(state.lastResult, false);
 });
 $('#refreshHistory').addEventListener('click', loadHistory);
-$('#menuBtn').addEventListener('click', () => {
-  // 可扩展侧边菜单
-  showToast('更多功能开发中...');
-});
 
 // ---- 初始化 ----
 loadHistory();
