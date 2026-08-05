@@ -7,71 +7,109 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- 背景网格 -->
+  <div class="grid-bg"></div>
+
   <div class="app">
-    <header class="hero">
-      <div class="logo">🎁 求一基</div>
-      <p class="subtitle">趣味开盲盒，摇出一只值得研究的基金</p>
+    <!-- 顶栏 -->
+    <header class="topbar">
+      <span class="brand">求一基</span>
+      <button class="menu-btn" id="menuBtn" aria-label="菜单">&#9776;</button>
     </header>
 
-    <section class="panel filters">
-      <div class="filter-group">
-        <label>基金类型</label>
-        <div class="chips" data-field="type">
-          <button class="chip active" data-val="mix">混合型</button>
-          <button class="chip" data-val="stock">股票型</button>
-          <button class="chip" data-val="bond">纯债型</button>
-          <button class="chip" data-val="index">指数型</button>
-        </div>
+    <!-- 主标语 -->
+    <div class="slogan">万 一 跟 你 想 得 一 样 呢 ？</div>
+
+    <!-- 老虎机数字显示区 -->
+    <section class="slot-machine">
+      <div class="led-bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
       </div>
-      <div class="filter-group">
-        <label>风险偏好</label>
-        <div class="chips" data-field="risk">
-          <button class="chip active" data-val="中">中等</button>
-          <button class="chip" data-val="低">低</button>
-          <button class="chip" data-val="高">高</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <label>持有期</label>
-        <div class="chips" data-field="horizon">
-          <button class="chip active" data-val="中">中期(1-3年)</button>
-          <button class="chip" data-val="短">短期(&lt;1年)</button>
-          <button class="chip" data-val="长">长期(&gt;3年)</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <label>排序维度</label>
-        <div class="chips" data-field="sort">
-          <button class="chip active" data-val="3y">近三年</button>
-          <button class="chip" data-val="1y">近一年</button>
-          <button class="chip" data-val="2y">近二年</button>
-          <button class="chip" data-val="5y">近五年</button>
-        </div>
+      <div class="slot-label">FUND CODE</div>
+      <div class="digit-row" id="digitRow">
+        <div class="digit-box"><span class="digit" data-idx="0">-</span></div>
+        <div class="digit-box"><span class="digit" data-idx="1">-</span></div>
+        <div class="digit-box"><span class="digit" data-idx="2">-</span></div>
+        <div class="digit-box"><span class="digit" data-idx="3">-</span></div>
+        <div class="digit-box"><span class="digit" data-idx="4">-</span></div>
+        <div class="digit-box"><span class="digit" data-idx="5">-</span></div>
       </div>
     </section>
 
-    <section class="panel draw-area">
-      <button id="drawBtn" class="draw-btn">🎲 求一基</button>
-      <p class="hint">每次在通过价值初筛的候选池中随机摇出一只，并非收益榜首。</p>
-      <div id="loading" class="loading hidden">
-        <div class="slot" id="slot">盲盒开启中…</div>
+    <!-- 心想事成 / 等待摇奖 -->
+    <section class="wish-panel" id="wishPanel">
+      <div class="wish-text" id="wishText">心 想 事 成</div>
+      <div class="slot-status hidden" id="slotStatus">
+        <span class="slot-icon">&#127922;</span>
+        <span class="status-msg" id="statusMsg">等待摇奖…</span>
       </div>
     </section>
 
-    <section id="result" class="panel result hidden"></section>
+    <!-- 许愿条件（筛选） -->
+    <section class="filter-panel">
+      <div class="filter-title"><span class="gear">&#9881;</span> 许愿条件（可选）</div>
+      <div class="filter-row">
+        <select id="selType" class="cyber-select">
+          <option value="">不限，全凭运气</option>
+          <option value="mix" selected>混合型基金</option>
+          <option value="stock">股票型基金</option>
+          <option value="bond">纯债型基金</option>
+          <option value="index">指数型基金</option>
+        </select>
+        <select id="selRisk" class="cyber-select">
+          <option value="">不限风险</option>
+          <option value="低">低风险</option>
+          <option value="中" selected>中风险</option>
+          <option value="高">高风险</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <select id="selHorizon" class="cyber-select">
+          <option value="">不限持有期</option>
+          <option value="短">短期 (&lt;1年)</option>
+          <option value="中" selected>中期 (1-3年)</option>
+          <option value="长">长期 (&gt;3年)</option>
+        </select>
+        <select id="selSort" class="cyber-select">
+          <option value="3y" selected>近三年排序</option>
+          <option value="1y">近一年排序</option>
+          <option value="2y">近二年排序</option>
+          <option value="5y">近五年排序</option>
+        </select>
+      </div>
+    </section>
 
-    <section class="panel history">
+    <!-- 操作按钮 -->
+    <section class="action-row">
+      <button class="draw-btn" id="drawBtn"><span class="btn-icon">&#127922;</span> 摇 一 摇</button>
+      <button class="save-btn" id="saveBtn" disabled><span class="btn-icon">&#128190;</span> 保存本次</button>
+    </section>
+
+    <!-- 结果面板 -->
+    <section id="resultPanel" class="result-panel hidden"></section>
+
+    <!-- 历史记录 -->
+    <section class="history-panel" id="historyPanel">
       <div class="history-head">
-        <h3>📜 我的抽签记录</h3>
-        <button id="refreshHistory" class="link-btn">刷新</button>
+        <span>&#128220; 抽签记录</span>
+        <button class="refresh-btn" id="refreshHistory">&#8635;</button>
       </div>
       <ul id="historyList" class="history-list"></ul>
     </section>
 
-    <footer class="foot">
-      <p>本工具由公开数据快照与腾讯混元大模型生成，仅供娱乐与研究参考，<b>不构成投资建议</b>。基金有风险，投资需谨慎。</p>
+    <!-- 免责声明 -->
+    <footer class="disclaimer">
+      本结果由 AI 大模型生成，可能非实时/准确数据，仅供娱乐参考，不构成投资建议。
+      基金有风险，投资需谨慎独立判断。
     </footer>
   </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
   <script src="app.js"></script>
 </body>
 </html>
