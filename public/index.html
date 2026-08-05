@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>求一基 · 趣味抽签基金推荐</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div class="logo">🎁 求一基</div>
+      <p class="subtitle">趣味开盲盒，摇出一只值得研究的基金</p>
+    </header>
+
+    <section class="panel filters">
+      <div class="filter-group">
+        <label>基金类型</label>
+        <div class="chips" data-field="type">
+          <button class="chip active" data-val="mix">混合型</button>
+          <button class="chip" data-val="stock">股票型</button>
+          <button class="chip" data-val="bond">纯债型</button>
+          <button class="chip" data-val="index">指数型</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>风险偏好</label>
+        <div class="chips" data-field="risk">
+          <button class="chip active" data-val="中">中等</button>
+          <button class="chip" data-val="低">低</button>
+          <button class="chip" data-val="高">高</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>持有期</label>
+        <div class="chips" data-field="horizon">
+          <button class="chip active" data-val="中">中期(1-3年)</button>
+          <button class="chip" data-val="短">短期(&lt;1年)</button>
+          <button class="chip" data-val="长">长期(&gt;3年)</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>排序维度</label>
+        <div class="chips" data-field="sort">
+          <button class="chip active" data-val="3y">近三年</button>
+          <button class="chip" data-val="1y">近一年</button>
+          <button class="chip" data-val="2y">近二年</button>
+          <button class="chip" data-val="5y">近五年</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel draw-area">
+      <button id="drawBtn" class="draw-btn">🎲 求一基</button>
+      <p class="hint">每次在通过价值初筛的候选池中随机摇出一只，并非收益榜首。</p>
+      <div id="loading" class="loading hidden">
+        <div class="slot" id="slot">盲盒开启中…</div>
+      </div>
+    </section>
+
+    <section id="result" class="panel result hidden"></section>
+
+    <section class="panel history">
+      <div class="history-head">
+        <h3>📜 我的抽签记录</h3>
+        <button id="refreshHistory" class="link-btn">刷新</button>
+      </div>
+      <ul id="historyList" class="history-list"></ul>
+    </section>
+
+    <footer class="foot">
+      <p>本工具由公开数据快照与腾讯混元大模型生成，仅供娱乐与研究参考，<b>不构成投资建议</b>。基金有风险，投资需谨慎。</p>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
