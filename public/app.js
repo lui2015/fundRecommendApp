@@ -318,6 +318,9 @@ function renderResult(data) {
   // 点击提炼卡片 → 打开详情弹框
   wishPanel.onclick = () => openModal();
 
+  // 烟花绽放庆祝
+  launchFireworks();
+
   // 详情弹框内容（完整数据）
   modalBody.innerHTML = `
     <div class="res-header">
@@ -501,6 +504,96 @@ function initParticles() {
   }
   particlesEl.appendChild(frag);
 }
+
+// ---- 烟花绽放效果 ----
+const fwCanvas = document.getElementById('fireworks');
+let fwCtx = null, fwRaf = null, fwParticles = [], fwRunning = false;
+const FW_COLORS = ['#e63946', '#f0c14b', '#2ecc71', '#4dabf7', '#ff7eb6', '#fff'];
+
+function resizeFw() {
+  if (!fwCanvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  fwCanvas.width = window.innerWidth * dpr;
+  fwCanvas.height = window.innerHeight * dpr;
+  fwCtx = fwCanvas.getContext('2d');
+  fwCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function spawnBurst(cx, cy) {
+  const n = 36 + Math.floor(Math.random() * 24);
+  const color = FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)];
+  const power = 2 + Math.random() * 2.5;
+  for (let i = 0; i < n; i++) {
+    const ang = (Math.PI * 2 * i) / n + Math.random() * 0.3;
+    const sp = power * (0.5 + Math.random());
+    fwParticles.push({
+      x: cx, y: cy,
+      vx: Math.cos(ang) * sp,
+      vy: Math.sin(ang) * sp - 0.6,
+      life: 1,
+      decay: 0.012 + Math.random() * 0.012,
+      color: Math.random() > 0.7 ? FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)] : color,
+      size: 1.5 + Math.random() * 2,
+    });
+  }
+}
+
+function fwLoop() {
+  if (!fwCtx) return;
+  fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+  fwCtx.globalCompositeOperation = 'lighter';
+  for (let i = fwParticles.length - 1; i >= 0; i--) {
+    const p = fwParticles[i];
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.045;            // 重力
+    p.vx *= 0.99; p.vy *= 0.99;
+    p.life -= p.decay;
+    if (p.life <= 0) { fwParticles.splice(i, 1); continue; }
+    fwCtx.beginPath();
+    fwCtx.globalAlpha = Math.max(0, p.life);
+    fwCtx.fillStyle = p.color;
+    fwCtx.shadowBlur = 12;
+    fwCtx.shadowColor = p.color;
+    fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    fwCtx.fill();
+  }
+  fwCtx.globalAlpha = 1;
+  fwCtx.shadowBlur = 0;
+  fwCtx.globalCompositeOperation = 'source-over';
+  if (fwParticles.length > 0 || fwRunning) {
+    fwRaf = requestAnimationFrame(fwLoop);
+  } else {
+    fwCanvas.classList.remove('active');
+    cancelAnimationFrame(fwRaf);
+  }
+}
+
+function launchFireworks() {
+  if (!fwCanvas) return;
+  if (!fwCtx) resizeFw();
+  fwCanvas.classList.add('active');
+  // 多次绽放
+  const bursts = [
+    { t: 0,   x: 0.25, y: 0.35 },
+    { t: 180, x: 0.75, y: 0.30 },
+    { t: 360, x: 0.50, y: 0.22 },
+    { t: 540, x: 0.30, y: 0.45 },
+    { t: 720, x: 0.70, y: 0.48 },
+  ];
+  bursts.forEach(b => {
+    setTimeout(() => {
+      spawnBurst(window.innerWidth * b.x, window.innerHeight * b.y);
+      if (!fwRunning) { fwRunning = true; fwLoop(); }
+    }, b.t);
+  });
+  // 收尾清理
+  setTimeout(() => {
+    fwRunning = false;
+    if (fwParticles.length === 0) fwCanvas.classList.remove('active');
+  }, 1600);
+}
+
+window.addEventListener('resize', () => { if (fwCtx) resizeFw(); });
 
 // ---- 初始化 ----
 initParticles();
