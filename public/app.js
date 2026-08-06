@@ -505,58 +505,81 @@ function initParticles() {
   particlesEl.appendChild(frag);
 }
 
-// ---- 烟花绽放效果（轻量版，避免卡顿）----
+// ---- 烟花绽放效果（发光版 · 不卡顿）----
 const fwCanvas = document.getElementById('fireworks');
-let fwCtx = null, fwRaf = null, fwParticles = [], fwRunning = false;
-const FW_COLORS = ['#e63946', '#f0c14b', '#2ecc71', '#4dabf7', '#ff7eb6'];
+let fwCtx = null, fwRaf = null, fwParticles = [], fwFlashes = [], fwRunning = false;
+const FW_COLORS = ['#e63946', '#f0c14b', '#2ecc71', '#4dabf7', '#ff7eb6', '#ffffff'];
+
+function hexA(hex, a) {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
 
 function resizeFw() {
   if (!fwCanvas) return;
-  // 不用 devicePixelRatio，用固定低分辨率避免高 DPI 卡顿
-  fwCanvas.width = window.innerWidth;
-  fwCanvas.height = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  fwCanvas.width = window.innerWidth * dpr;
+  fwCanvas.height = window.innerHeight * dpr;
   fwCtx = fwCanvas.getContext('2d');
+  fwCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function spawnBurst(cx, cy) {
-  const n = 18; // 减少粒子数
   const color = FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)];
-  const power = 1.8 + Math.random() * 1.8;
+  const n = 30;
+  const power = 2.4 + Math.random() * 1.8;
   for (let i = 0; i < n; i++) {
-    const ang = (Math.PI * 2 * i) / n + (Math.random() - 0.5) * 0.4;
-    const sp = power * (0.4 + Math.random() * 0.8);
+    const ang = (Math.PI * 2 * i) / n + (Math.random() - 0.5) * 0.3;
+    const sp = power * (0.4 + Math.random() * 0.9);
     fwParticles.push({
       x: cx, y: cy,
       vx: Math.cos(ang) * sp,
-      vy: Math.sin(ang) * sp - 0.4,
+      vy: Math.sin(ang) * sp - 0.5,
       life: 1,
-      decay: 0.018 + Math.random() * 0.01, // 更快衰减
-      color: Math.random() > 0.6 ? FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)] : color,
-      size: 1.2 + Math.random() * 1.6,
+      decay: 0.010 + Math.random() * 0.007,  // 更慢衰减 → 持续更久
+      color: Math.random() > 0.5 ? FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)] : color,
+      size: 1.8 + Math.random() * 2.6,
     });
   }
+  // 爆心闪光
+  fwFlashes.push({ x: cx, y: cy, life: 1, color });
 }
 
 function fwLoop() {
   if (!fwCtx) return;
   fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
-  // 不用 lighter 混合（太耗性能），改用 source-over + 半透明
+  fwCtx.globalCompositeOperation = 'lighter'; // 叠加发光（无 shadowBlur，性能可控）
+  // 爆心闪光
+  for (let i = fwFlashes.length - 1; i >= 0; i--) {
+    const f = fwFlashes[i];
+    f.life -= 0.06;
+    if (f.life <= 0) { fwFlashes.splice(i, 1); continue; }
+    const r = 14 + 70 * (1 - f.life);
+    const g = fwCtx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r);
+    g.addColorStop(0, hexA(f.color, f.life));
+    g.addColorStop(1, hexA(f.color, 0));
+    fwCtx.fillStyle = g;
+    fwCtx.beginPath();
+    fwCtx.arc(f.x, f.y, r, 0, Math.PI * 2);
+    fwCtx.fill();
+  }
+  // 粒子
   for (let i = fwParticles.length - 1; i >= 0; i--) {
     const p = fwParticles[i];
     p.x += p.vx; p.y += p.vy;
-    p.vy += 0.055;
+    p.vy += 0.05;
     p.vx *= 0.985; p.vy *= 0.985;
     p.life -= p.decay;
     if (p.life <= 0) { fwParticles.splice(i, 1); continue; }
-    const a = Math.max(0, p.life * 0.85);
-    fwCtx.globalAlpha = a;
+    fwCtx.globalAlpha = Math.min(1, p.life * 1.3);
     fwCtx.fillStyle = p.color;
     fwCtx.beginPath();
-    fwCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); // 随生命值缩小
+    fwCtx.arc(p.x, p.y, p.size * (0.4 + 0.6 * p.life), 0, Math.PI * 2);
     fwCtx.fill();
   }
   fwCtx.globalAlpha = 1;
-  if (fwParticles.length > 0 || fwRunning) {
+  fwCtx.globalCompositeOperation = 'source-over';
+  if (fwParticles.length > 0 || fwFlashes.length > 0 || fwRunning) {
     fwRaf = requestAnimationFrame(fwLoop);
   } else {
     fwCanvas.classList.remove('active');
@@ -568,11 +591,12 @@ function launchFireworks() {
   if (!fwCanvas) return;
   if (!fwCtx) resizeFw();
   fwCanvas.classList.add('active');
-  // 3 次绽放（减少次数）
+  // 4 次连放，整体更亮更久
   const bursts = [
-    { t: 0,   x: 0.30, y: 0.35 },
-    { t: 220, x: 0.70, y: 0.28 },
-    { t: 440, x: 0.50, y: 0.20 },
+    { t: 0,    x: 0.28, y: 0.34 },
+    { t: 250,  x: 0.72, y: 0.28 },
+    { t: 520,  x: 0.50, y: 0.18 },
+    { t: 780,  x: 0.40, y: 0.44 },
   ];
   let started = false;
   bursts.forEach(b => {
@@ -584,8 +608,8 @@ function launchFireworks() {
   // 收尾清理
   setTimeout(() => {
     fwRunning = false;
-    if (fwParticles.length === 0) fwCanvas.classList.remove('active');
-  }, 1200);
+    if (fwParticles.length === 0 && fwFlashes.length === 0) fwCanvas.classList.remove('active');
+  }, 2400);
 }
 
 window.addEventListener('resize', () => { if (fwCtx) resizeFw(); });
