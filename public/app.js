@@ -163,6 +163,7 @@ function listHtml(arr, fb) {
 }
 
 // ---- 抽签主流程 ----
+let drawTimer = null; // 请求倒计时
 async function doDraw() {
   if (state.isDrawing) return;
   state.isDrawing = true;
@@ -180,12 +181,27 @@ async function doDraw() {
   drawBtn.classList.add('charging');
   slogan.classList.add('flash');
 
+  // 请求中：显示已等待时间
+  let elapsed = 0;
+  const statusEl = $('#statusMsg');
+  statusEl.textContent = 'AI 正在筛选基金…';
+  drawTimer = setInterval(() => {
+    elapsed++;
+    if (elapsed <= 5) {
+      statusEl.textContent = 'AI 正在筛选基金' + '.'.repeat(elapsed % 4);
+    } else if (elapsed <= 20) {
+      statusEl.textContent = '混元大模型生成推荐中 (' + elapsed + 's)';
+    } else {
+      statusEl.textContent = '仍在处理中，请稍候 (' + elapsed + 's)';
+    }
+  }, 1000);
+
   // 超时保护：60s 后自动取消
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 60000);
 
   try {
-    const resp = await fetch('api/draw', {
+    const resp = await fetch('api/draw?v=' + Date.now(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -196,6 +212,7 @@ async function doDraw() {
       }),
       signal: ctrl.signal,
     });
+    clearInterval(drawTimer); drawTimer = null;
     clearTimeout(timer);
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || '抽签失败');
@@ -206,38 +223,29 @@ async function doDraw() {
     const code = (data.fund && data.fund.code) || '------';
     stopSpin(code);
 
-    // 稍等动画完成后渲染结果（加安全保护）
+    // 动画完成后渲染结果（缩短延迟，因为 API 已够慢）
     setTimeout(() => {
       try { renderResult(data); } catch (err) {
         console.error('renderResult error:', err);
         showToast('结果渲染异常，请重试');
         resetUI();
       }
-    }, 600);
+    }, 400);
 
   } catch (e) {
+    clearInterval(drawTimer); drawTimer = null;
     clearTimeout(timer);
-    spinTimers.forEach(t => clearInterval(t.timer));
-    spinTimers = [];
-    resetDigits();
-    closeModal();
-    slotStatus.classList.add('hidden');
-    wishText.classList.remove('hidden');
-    wishText.textContent = '心 想 事 成';
-    resultSummary.classList.add('hidden');
-    wishPanel.classList.remove('has-result');
-    wishPanel.onclick = null;
-    const msg = e.name === 'AbortError' ? '请求超时，后端处理时间过长，请稍后重试' : ('抽签失败：' + e.message);
+    resetUI();
+    const msg = e.name === 'AbortError'
+      ? '请求超时（>60s），后端 AI 处理时间过长，请稍后重试'
+      : ('抽签失败：' + e.message);
     showToast(msg);
-    drawBtn.classList.remove('charging');
-    slogan.classList.remove('flash');
-    state.isDrawing = false;
-    drawBtn.disabled = false;
   }
 }
 
 // ---- 渲染结果 ----
 function renderResult(data) {
+  try {
   const f = data.fund;
   const m = data.metrics || {};
   const r = (data.reason && data.reason.structured) ? data.reason.structured : null;
@@ -343,6 +351,11 @@ function renderResult(data) {
 
   state.isDrawing = false;
   drawBtn.disabled = false;
+  } catch (err) {
+    console.error('renderResult inner error:', err);
+    showToast('结果渲染异常，请重试');
+    resetUI();
+  }
 }
 
 // ---- 保存 ----
