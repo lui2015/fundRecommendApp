@@ -18,6 +18,9 @@ const slotStatus = $('#slotStatus');
 const statusMsg = $('#statusMsg');
 const digitRow = $('#digitRow');
 const resultPanel = $('#resultPanel');
+const modalOverlay = $('#modalOverlay');
+const modalClose = $('#modalClose');
+const modalBody = $('#modalBody');
 const resultSummary = $('#resultSummary');
 const summaryFundName = $('#summaryFundName');
 const summaryOneliner = $('#summaryOneliner');
@@ -139,7 +142,7 @@ async function doDraw() {
   if (state.isDrawing) return;
   state.isDrawing = true;
   drawBtn.disabled = true;
-  resultPanel.classList.add('hidden');
+  closeModal();
   saveBtn.disabled = true;
   // 重置提炼卡片
   resultSummary.classList.add('hidden');
@@ -177,6 +180,7 @@ async function doDraw() {
     spinTimers.forEach(t => clearInterval(t.timer));
     spinTimers = [];
     resetDigits();
+    closeModal();
     slotStatus.classList.add('hidden');
     wishText.classList.remove('hidden');
     wishText.textContent = '心 想 事 成';
@@ -231,19 +235,11 @@ function renderResult(data) {
   wishText.classList.add('hidden');
   wishPanel.classList.add('has-result');
 
-  // 点击提炼卡片 → 展开/收起详情面板
-  wishPanel.onclick = () => {
-    if (resultPanel.classList.contains('hidden')) {
-      resultPanel.classList.remove('hidden');
-      // 滚动到详情面板可见区域
-      setTimeout(() => resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-    } else {
-      resultPanel.classList.add('hidden');
-    }
-  };
+  // 点击提炼卡片 → 打开详情弹框
+  wishPanel.onclick = () => openModal();
 
-  // 详情面板内容（完整数据）
-  resultPanel.innerHTML = `
+  // 详情弹框内容（完整数据）
+  modalBody.innerHTML = `
     <div class="res-header">
       <div class="res-tags">
         <span class="tag tag-blind">盲盒抽取</span>
@@ -268,7 +264,6 @@ function renderResult(data) {
       <button class="res-btn res-btn-primary" id="detailBtn">&#128270; 查看详情报告</button>
     </div>`;
 
-  resultPanel.classList.remove('hidden');
   saveBtn.disabled = false;
 
   // 绑定事件
@@ -353,6 +348,21 @@ async function delHistory(id) {
   } catch (e) { showToast('删除失败'); }
 }
 
+// ---- 详情弹框（Modal） ----
+function openModal() {
+  modalOverlay.classList.add('show');
+  resultPanel.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  modalOverlay.classList.remove('show');
+  resultPanel.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+modalClose.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', closeModal);
+
 // ---- 侧边栏（更多菜单） ----
 function openDrawer() {
   drawer.classList.add('open');
@@ -369,8 +379,13 @@ function closeDrawer() {
 $('#menuBtn').addEventListener('click', openDrawer);
 $('#drawerClose').addEventListener('click', closeDrawer);
 drawerOverlay.addEventListener('click', closeDrawer);
-// ESC 关闭
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+// ESC 关闭（优先弹框 > 抽屉）
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (resultPanel.classList.contains('open')) closeModal();
+    else closeDrawer();
+  }
+});
 
 // ---- 事件绑定 ----
 drawBtn.addEventListener('click', doDraw);

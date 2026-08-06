@@ -95,14 +95,18 @@
       <button class="save-btn" id="saveBtn" disabled><span class="btn-icon">&#128190;</span> 保存本次</button>
     </section>
 
-    <!-- 结果面板 -->
-    <section id="resultPanel" class="result-panel hidden"></section>
-
     <!-- 免责声明 -->
     <footer class="disclaimer">
       本结果由 AI 大模型生成，可能非实时/准确数据，仅供娱乐参考，不构成投资建议。
       基金有风险，投资需谨慎独立判断。
     </footer>
+  </div>
+
+  <!-- 详情弹框（Modal） -->
+  <div class="modal-overlay" id="modalOverlay"></div>
+  <div class="modal" id="resultPanel">
+    <button class="modal-close" id="modalClose" aria-label="关闭">&times;</button>
+    <div class="modal-body" id="modalBody"></div>
   </div>
 
   <!-- 侧边栏（更多菜单） -->

@@ -270,19 +270,77 @@ html, body {
 }
 .save-btn:disabled { opacity: .35; cursor: not-allowed; }
 
-/* ---- 结果面板 ---- */
-.result-panel {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: 18px;
-  padding: 22px 18px;
-  margin: 16px 0;
-  animation: fadeUp .35s ease-out;
+/* ---- 详情弹框（Modal） ---- */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(8px);
+  z-index: 300; opacity: 0; pointer-events: none;
+  transition: opacity .3s ease;
 }
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+.modal {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(.7);
+  width: calc(100vw - 32px); max-width: 480px;
+  max-height: calc(100vh - 64px);
+  background: var(--bg2);
+  border: 2px solid var(--red-dim);
+  border-radius: 22px;
+  z-index: 301;
+  opacity: 0; pointer-events: none;
+  transition:
+    transform .4s cubic-bezier(.34,1.56,.64,1),
+    opacity .3s ease,
+    box-shadow .4s ease;
+  box-shadow:
+    0 0 60px rgba(230,57,70,.15),
+    0 24px 80px rgba(0,0,0,.5);
+  overflow: hidden;
 }
+.modal.open {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1; pointer-events: auto;
+  box-shadow:
+    0 0 80px rgba(230,57,70,.25),
+    0 32px 100px rgba(0,0,0,.6),
+    inset 0 0 30px rgba(230,57,70,.04);
+}
+
+/* 弹框入场发光脉冲 */
+@keyframes modalPulse {
+  0%   { box-shadow: 0 0 60px rgba(230,57,70,.15), 0 24px 80px rgba(0,0,0,.5); }
+  50%  { box-shadow: 0 0 120px rgba(230,57,70,.35), 0 24px 80px rgba(0,0,0,.5), 0 0 200px rgba(230,57,70,.08); }
+  100% { box-shadow: 0 0 80px rgba(230,57,70,.25), 0 32px 100px rgba(0,0,0,.6); }
+}
+.modal.open {
+  animation: modalPulse .6s ease-out;
+}
+
+.modal-close {
+  position: absolute; top: 12px; right: 12px; z-index: 10;
+  background: rgba(255,255,255,.06); border: 1px solid var(--border);
+  color: var(--text2); font-size: 20px; width: 36px; height: 36px;
+  border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1; transition: all .2s;
+}
+.modal-close:hover {
+  background: rgba(230,57,70,.15); border-color: var(--red); color: var(--red);
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 28px 22px 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 64px);
+  /* 自定义滚动条 */
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.modal-body::-webkit-scrollbar { width: 5px; }
+.modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 .res-header { margin-bottom: 14px; }
 .res-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
