@@ -31,6 +31,8 @@ const historyList = $('#historyList');
 const toastEl = $('#toast');
 const drawer = $('#drawer');
 const drawerOverlay = $('#drawerOverlay');
+const slogan = $('#slogan');
+const particlesEl = $('#particles');
 
 // ---- Toast ----
 function showToast(msg) {
@@ -103,6 +105,9 @@ function revealDigits(codeStr) {
           document.querySelectorAll('.led-bar .dot').forEach((d, i) => {
             setTimeout(() => d.classList.add('active'), i * 40);
           });
+          // 移除蓄能动效
+          drawBtn.classList.remove('charging');
+          slogan.classList.remove('flash');
         }, 300);
       }
     }, remaining);
@@ -155,6 +160,8 @@ async function doDraw() {
   wishPanel.onclick = null;
 
   startSpin();
+  drawBtn.classList.add('charging');
+  slogan.classList.add('flash');
 
   try {
     const resp = await fetch('api/draw', {
@@ -191,6 +198,8 @@ async function doDraw() {
     wishPanel.classList.remove('has-result');
     wishPanel.onclick = null;
     showToast('抽签失败：' + e.message);
+    drawBtn.classList.remove('charging');
+    slogan.classList.remove('flash');
     state.isDrawing = false;
     drawBtn.disabled = false;
   }
@@ -422,5 +431,29 @@ saveBtn.addEventListener('click', () => {
 });
 $('#refreshHistory').addEventListener('click', loadHistory);
 
+// ---- 漂浮粒子 ----
+function initParticles() {
+  if (!particlesEl) return;
+  const N = 26;
+  const colors = ['rgba(240,193,75,', 'rgba(230,57,70,', 'rgba(255,255,255,'];
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < N; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 1.5 + Math.random() * 3;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    p.style.left = (Math.random() * 100) + 'vw';
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.background = color + '0.9)';
+    p.style.boxShadow = '0 0 ' + (size * 2) + 'px ' + color + '0.8)';
+    p.style.animationDuration = (8 + Math.random() * 12) + 's';
+    p.style.animationDelay = (-Math.random() * 12) + 's';
+    frag.appendChild(p);
+  }
+  particlesEl.appendChild(frag);
+}
+
 // ---- 初始化 ----
+initParticles();
 loadHistory();
