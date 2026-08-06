@@ -17,8 +17,8 @@ const wishText = $('#wishText');
 const slotStatus = $('#slotStatus');
 const statusMsg = $('#statusMsg');
 const digitRow = $('#digitRow');
-const resultPanel = $('#resultPanel');
 const modalOverlay = $('#modalOverlay');
+const resultPanel = $('#resultPanel');
 const modalClose = $('#modalClose');
 const modalBody = $('#modalBody');
 const resultSummary = $('#resultSummary');
@@ -68,6 +68,9 @@ function startSpin() {
   statusMsg.textContent = '等待摇奖…';
   spawnLoadingParticles();
 
+  // 触发 LED 跑马灯动效
+  document.querySelector('.slot-machine').classList.add('rolling');
+
   const boxes = digitRow.querySelectorAll('.digit-box');
   boxes.forEach((box) => box.classList.add('rolling'));
 
@@ -97,6 +100,12 @@ function revealDigits(codeStr) {
       box.classList.remove('rolling');
       box.classList.add('revealed');
 
+      // 闪光冲击波
+      const flash = document.createElement('div');
+      flash.className = 'reveal-flash';
+      box.appendChild(flash);
+      setTimeout(() => flash.remove(), 650);
+
       // 最后一个停止后切换状态
       if (idx === codeStr.length - 1) {
         setTimeout(() => {
@@ -105,7 +114,8 @@ function revealDigits(codeStr) {
           clearLoadingParticles();
           // 不再默认显示"心 想 事 成"，等 renderResult 后才展示提炼卡片
           wishText.classList.add('hidden');
-          // LED 全亮
+          // 移除摇奖中动效，LED 全亮
+          document.querySelector('.slot-machine').classList.remove('rolling');
           document.querySelectorAll('.led-bar .dot').forEach((d, i) => {
             setTimeout(() => d.classList.add('active'), i * 40);
           });
@@ -142,12 +152,12 @@ function resetUI() {
   spinTimers.forEach(t => clearInterval(t.timer));
   spinTimers = [];
   resetDigits();
-  closeModal();
+  closeModal(); // 关闭弹框
   slotStatus.classList.add('hidden');
   wishPanel.classList.remove('loading');
   clearLoadingParticles();
   wishText.classList.remove('hidden');
-  wishText.textContent = '心 想 事 成';
+  wishText.innerHTML = '<span class="char">等</span><span class="char">待</span><span class="char">摇</span><span class="char">奖</span>';
   resultSummary.classList.add('hidden');
   wishPanel.classList.remove('has-result');
   wishPanel.onclick = null;
@@ -179,7 +189,7 @@ async function doDraw() {
   // 重置提炼卡片
   resultSummary.classList.add('hidden');
   wishText.classList.remove('hidden');
-  wishText.textContent = '心 想 事 成';
+  wishText.innerHTML = '<span class="char">等</span><span class="char">待</span><span class="char">摇</span><span class="char">奖</span>';
   wishPanel.classList.remove('has-result');
   wishPanel.onclick = null;
 
@@ -321,14 +331,14 @@ function renderResult(data) {
   wishText.classList.add('hidden');
   wishPanel.classList.add('has-result');
 
-  // 点击提炼卡片 → 打开详情弹框
+  // 点击提炼卡片 → 弹出详情弹框
   wishPanel.onclick = () => openModal();
 
   // 烟花绽放庆祝
   launchFireworks();
 
   // 详情弹框内容（完整数据）
-  modalBody.innerHTML = `
+  const detailHtml = `
     <div class="res-header">
       <div class="res-tags">
         <span class="tag tag-blind">盲盒抽取</span>
@@ -353,14 +363,16 @@ function renderResult(data) {
       <button class="res-btn res-btn-primary" id="detailBtn">&#128270; 查看详情报告</button>
     </div>`;
 
+  modalBody.innerHTML = detailHtml;
+
   saveBtn.disabled = false;
 
-  // 绑定事件
-  $('#againBtn').addEventListener('click', doDraw);
-  $('#detailBtn').addEventListener('click', () => {
+  // 绑定事件（弹框内按钮）
+  document.querySelectorAll('#againBtn').forEach(b => b.addEventListener('click', doDraw));
+  document.querySelectorAll('#detailBtn').forEach(b => b.addEventListener('click', () => {
     if (data._savedId) window.open('api/reports/' + data._savedId, '_blank');
     else saveResult(data, true);
-  });
+  }));
 
   state.isDrawing = false;
   drawBtn.disabled = false;
@@ -443,17 +455,19 @@ async function delHistory(id) {
 }
 
 // ---- 详情弹框（Modal） ----
+let isModalOpen = false;
 function openModal() {
+  if (isModalOpen) return;
+  isModalOpen = true;
   modalOverlay.classList.add('show');
   resultPanel.classList.add('open');
-  document.body.style.overflow = 'hidden';
 }
 function closeModal() {
+  if (!isModalOpen) return;
+  isModalOpen = false;
   modalOverlay.classList.remove('show');
   resultPanel.classList.remove('open');
-  document.body.style.overflow = '';
 }
-
 modalClose.addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', closeModal);
 
@@ -476,7 +490,7 @@ drawerOverlay.addEventListener('click', closeDrawer);
 // ESC 关闭（优先弹框 > 抽屉）
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (resultPanel.classList.contains('open')) closeModal();
+    if (isModalOpen) closeModal();
     else closeDrawer();
   }
 });

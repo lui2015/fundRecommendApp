@@ -148,14 +148,14 @@ html, body {
 /* ============ 标语 ============ */
 .slogan {
   text-align: center;
-  font-size: 20px; font-weight: 700;
-  letter-spacing: 6px; color: var(--red);
-  text-shadow: 0 0 30px var(--red-glow);
-  padding: 24px 0 10px;
-  opacity: .92;
+  font-size: 14px; font-weight: 500;
+  letter-spacing: 5px; color: #a33;
+  text-shadow: none;
+  padding: 14px 0 6px;
+  opacity: .6;
   animation: sloganBreath 4s ease-in-out infinite;
 }
-@keyframes sloganBreath { 0%,100%{ opacity:.78; text-shadow:0 0 18px var(--red-glow);} 50%{ opacity:1; text-shadow:0 0 36px var(--red-glow);} }
+@keyframes sloganBreath { 0%,100%{ opacity:.45; } 50%{ opacity:.65; } }
 .slogan.flash { animation: sloganFlash .5s ease; }
 @keyframes sloganFlash { 0%,100%{ opacity:.92;} 50%{ opacity:1; text-shadow:0 0 50px var(--red);} }
 
@@ -201,6 +201,48 @@ html, body {
 }
 .dot.active { background: var(--gold); box-shadow: 0 0 10px var(--gold), 0 0 18px rgba(240,193,75,.5); }
 
+/* ---- 摇奖中 LED 跳动 ---- */
+.slot-machine.rolling .dot {
+  background: var(--text3);
+  animation: dotJump .9s ease-in-out infinite;
+}
+/* 每个 dot 错开时间，形成从左到右跳动的效果 */
+.slot-machine.rolling .dot:nth-child(1)  { animation-delay: 0s; }
+.slot-machine.rolling .dot:nth-child(2)  { animation-delay: .064s; }
+.slot-machine.rolling .dot:nth-child(3)  { animation-delay: .128s; }
+.slot-machine.rolling .dot:nth-child(4)  { animation-delay: .192s; }
+.slot-machine.rolling .dot:nth-child(5)  { animation-delay: .256s; }
+.slot-machine.rolling .dot:nth-child(6)  { animation-delay: .320s; }
+.slot-machine.rolling .dot:nth-child(7)  { animation-delay: .384s; }
+.slot-machine.rolling .dot:nth-child(8)  { animation-delay: .448s; }
+.slot-machine.rolling .dot:nth-child(9)  { animation-delay: .512s; }
+.slot-machine.rolling .dot:nth-child(10) { animation-delay: .576s; }
+.slot-machine.rolling .dot:nth-child(11) { animation-delay: .640s; }
+.slot-machine.rolling .dot:nth-child(12) { animation-delay: .704s; }
+.slot-machine.rolling .dot:nth-child(13) { animation-delay: .768s; }
+.slot-machine.rolling .dot:nth-child(14) { animation-delay: .832s; }
+
+@keyframes dotJump {
+  0%,100% {
+    background: var(--text3);
+    box-shadow: none;
+    transform: scale(.8);
+    opacity: .35;
+  }
+  18% {
+    background: var(--gold);
+    box-shadow: 0 0 10px var(--gold), 0 0 20px rgba(240,193,75,.5);
+    transform: scale(1.5);
+    opacity: 1;
+  }
+  36% {
+    background: var(--text3);
+    box-shadow: none;
+    transform: scale(.8);
+    opacity: .35;
+  }
+}
+
 .slot-label {
   text-align: center; font-size: 11px; letter-spacing: 5px;
   color: var(--text3); font-weight: 600; text-transform: uppercase;
@@ -230,11 +272,50 @@ html, body {
 .digit-box.revealed {
   border-color: var(--red-dim);
   box-shadow: 0 0 22px var(--red-glow);
-  animation: digitLock .42s cubic-bezier(.34,1.56,.64,1);
+  animation: digitReveal .6s cubic-bezier(.34,1.56,.64,1) forwards;
 }
-@keyframes digitLock {
-  0% { transform: scale(1.14); box-shadow: 0 0 44px var(--red); }
-  100% { transform: scale(1); }
+/* 揭晓后持续脉冲 */
+.digit-box.revealed::before {
+  content: '';
+  position: absolute; inset: -2px;
+  border-radius: 14px;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    var(--red) 0%,
+    var(--gold) 35%,
+    var(--red) 65%,
+    var(--gold) 100%
+  );
+  background-size: 300% 300%;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude; -webkit-mask-composite: xor;
+  animation: revealBorderFlow 4s linear infinite;
+  pointer-events: none; z-index: 1;
+  opacity: .55;
+}
+@keyframes revealBorderFlow {
+  to { background-position: -300% -300%; }
+}
+@keyframes digitReveal {
+  0%   { transform: scale(1.25) rotate(-3deg); box-shadow: 0 0 60px var(--red), 0 0 100px rgba(230,57,70,.4); border-color: #fff; }
+  20%  { transform: scale(.92) rotate(1deg); }
+  40%  { transform: scale(1.08) rotate(-1deg); }
+  60%  { transform: scale(.98); }
+  80%  { transform: scale(1.02); }
+  100% { transform: scale(1) rotate(0); box-shadow: 0 0 18px var(--red-glow); border-color: var(--red-dim); }
+}
+/* 内部闪光冲击波 */
+.digit-box.revealed .reveal-flash {
+  position: absolute; inset: 50%; width: 200%; height: 200%;
+  margin-left: -50%; margin-top: -50%;
+  background: radial-gradient(circle, rgba(255,255,255,.5) 0%, transparent 60%);
+  animation: flashBurst .6s ease-out forwards;
+  pointer-events: none; z-index: 2;
+}
+@keyframes flashBurst {
+  0%   { transform: scale(0); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
 }
 .digit {
   font-family: var(--font-mono);
@@ -245,6 +326,17 @@ html, body {
   text-shadow: 0 0 8px rgba(232,232,236,.25);
 }
 .digit.spinning { animation: digitSpin .09s infinite; }
+/* 揭晓后数字发光脉冲 */
+.digit-box.revealed .digit {
+  background: linear-gradient(180deg, #fff 0%, var(--gold) 50%, var(--red-dim) 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: digitGlowPulse 2s ease-in-out infinite;
+}
+@keyframes digitGlowPulse {
+  0%,100% { background-position: 0% 0%; filter: drop-shadow(0 0 6px rgba(240,193,75,.3)); }
+  50%     { background-position: 0% 100%; filter: drop-shadow(0 0 14px rgba(230,57,70,.5)); }
+}
 @keyframes digitSpin {
   0%   { transform: translateY(-3px); opacity: .5; }
   50%  { transform: translateY(3px); opacity: 1; }
@@ -282,10 +374,105 @@ html, body {
   letter-spacing: 6px; color: var(--gold);
   text-shadow: 0 0 16px rgba(240,193,75,.25);
   animation: goldBreath 3s ease-in-out infinite;
+  position: relative; display: inline-block;
 }
 @keyframes goldBreath { 0%,100%{ text-shadow:0 0 10px rgba(240,193,75,.2);} 50%{ text-shadow:0 0 22px rgba(240,193,75,.45);} }
 
+/* ---- 等待摇奖 酷炫增强 ---- */
+/* 逐字闪烁 */
+.wish-text .char {
+  display: inline-block;
+  animation: charFlicker 2.4s ease-in-out infinite;
+}
+.wish-text .char:nth-child(1) { animation-delay: 0s; }
+.wish-text .char:nth-child(2) { animation-delay: .15s; }
+.wish-text .char:nth-child(3) { animation-delay: .30s; }
+.wish-text .char:nth-child(4) { animation-delay: .45s; }
+.wish-text .char:nth-child(5) { animation-delay: .60s; }
+@keyframes charFlicker {
+  0%,100% { opacity: .45; transform: translateY(1px); }
+  50% { opacity: 1; transform: translateY(-1px); text-shadow: 0 0 20px rgba(240,193,75,.6); }
+}
+
+/* 扫描光带 */
+.wish-panel::before {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 40%; height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(230,57,70,.06),
+    rgba(240,193,75,.08),
+    transparent
+  );
+  animation: scanSweep 3.5s ease-in-out infinite;
+  pointer-events: none; z-index: 1;
+}
+@keyframes scanSweep {
+  0% { left: -40%; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { left: 140%; opacity: 0; }
+}
+
+/* 边框流光 */
+.wish-panel::after {
+  content: '';
+  position: absolute; inset: -1.5px; border-radius: 18px;
+  padding: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--red-dim) 25%,
+    var(--gold) 50%,
+    var(--red-dim) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude; -webkit-mask-composite: xor;
+  animation: borderFlow 4s linear infinite;
+  pointer-events: none; z-index: 0;
+  opacity: .35;
+}
+@keyframes borderFlow {
+  to { background-position: -200% 0; }
+}
+
+/* 底部微粒子 */
+.idle-particles {
+  position: absolute; inset: 0; overflow: hidden;
+  pointer-events: none; z-index: 0;
+}
+.idle-particles .ip {
+  position: absolute; width: 2px; height: 2px; border-radius: 50%;
+  background: var(--gold); opacity: 0;
+  animation: idleFloat 5s ease-in-out infinite;
+}
+.idle-particles .ip:nth-child(even) { background: var(--red); width: 1.5px; height: 1.5px; }
+.idle-particles .ip:nth-child(1) { left: 12%; bottom: 20%; animation-delay: 0s; }
+.idle-particles .ip:nth-child(2) { left: 78%; bottom: 35%; animation-delay: .8s; }
+.idle-particles .ip:nth-child(3) { left: 35%; bottom: 60%; animation-delay: 1.6s; }
+.idle-particles .ip:nth-child(4) { left: 62%; bottom: 15%; animation-delay: 2.4s; }
+.idle-particles .ip:nth-child(5) { left: 88%; bottom: 70%; animation-delay: 3.2s; }
+@keyframes idleFloat {
+  0%   { transform: translateY(0) scale(.5); opacity: 0; }
+  30%  { opacity: .7; }
+  70%  { opacity: .4; }
+  100% { transform: translateY(-28px) scale(1); opacity: 0; }
+}
+
 /* ---- 等待摇奖（科幻加载态） ---- */
+.wish-panel.loading .wish-text,
+.wish-panel.has-result .wish-text,
+.wish-panel.loading::before,
+.wish-panel.has-result::before,
+.wish-panel.loading::after,
+.wish-panel.has-result::after,
+.wish-panel.loading .idle-particles,
+.wish-panel.has-result .idle-particles {
+  display: none !important;
+}
 .wish-panel.loading {
   border-color: rgba(230,57,70,.35);
   box-shadow:
@@ -466,7 +653,7 @@ html, body {
 .save-btn:not(:disabled):hover { border-color: var(--text3); color: var(--text); box-shadow: 0 0 14px rgba(255,255,255,.05); }
 .save-btn:disabled { opacity: .35; cursor: not-allowed; }
 
-/* ============ 详情弹框（Modal） ============ */
+/* ---- 详情弹框（Modal） ---- */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.7);
   backdrop-filter: blur(8px); z-index: 300; opacity: 0; pointer-events: none;
@@ -625,7 +812,7 @@ html, body {
 @media (max-width: 420px) {
   .digit-box { width: 44px; height: 58px; }
   .digit { font-size: 28px; }
-  .slogan { font-size: 16px; letter-spacing: 4px; }
+  .slogan { font-size: 13px; letter-spacing: 3px; }
   .draw-btn { font-size: 15px; letter-spacing: 3px; }
   .res-fund-name { font-size: 17px; }
   .summary-fund-name { font-size: 15px; }
