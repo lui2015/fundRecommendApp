@@ -134,6 +134,23 @@ function stopSpin(codeStr) {
 }
 
 // ---- 工具函数 ----
+function resetUI() {
+  spinTimers.forEach(t => clearInterval(t.timer));
+  spinTimers = [];
+  resetDigits();
+  closeModal();
+  slotStatus.classList.add('hidden');
+  wishText.classList.remove('hidden');
+  wishText.textContent = '心 想 事 成';
+  resultSummary.classList.add('hidden');
+  wishPanel.classList.remove('has-result');
+  wishPanel.onclick = null;
+  drawBtn.classList.remove('charging');
+  slogan.classList.remove('flash');
+  state.isDrawing = false;
+  drawBtn.disabled = false;
+  saveBtn.disabled = true;
+}
 function fmt(v, s = '%') {
   return (v === null || v === undefined) ? '--' : `${v}${s}`;
 }
@@ -163,6 +180,10 @@ async function doDraw() {
   drawBtn.classList.add('charging');
   slogan.classList.add('flash');
 
+  // 超时保护：60s 后自动取消
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 60000);
+
   try {
     const resp = await fetch('api/draw', {
       method: 'POST',
@@ -173,7 +194,9 @@ async function doDraw() {
         horizon: state.horizon,
         sort: state.sort
       }),
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || '抽签失败');
 
@@ -183,10 +206,17 @@ async function doDraw() {
     const code = (data.fund && data.fund.code) || '------';
     stopSpin(code);
 
-    // 稍等动画完成后渲染结果
-    setTimeout(() => renderResult(data), 600);
+    // 稍等动画完成后渲染结果（加安全保护）
+    setTimeout(() => {
+      try { renderResult(data); } catch (err) {
+        console.error('renderResult error:', err);
+        showToast('结果渲染异常，请重试');
+        resetUI();
+      }
+    }, 600);
 
   } catch (e) {
+    clearTimeout(timer);
     spinTimers.forEach(t => clearInterval(t.timer));
     spinTimers = [];
     resetDigits();
@@ -197,7 +227,8 @@ async function doDraw() {
     resultSummary.classList.add('hidden');
     wishPanel.classList.remove('has-result');
     wishPanel.onclick = null;
-    showToast('抽签失败：' + e.message);
+    const msg = e.name === 'AbortError' ? '请求超时，后端处理时间过长，请稍后重试' : ('抽签失败：' + e.message);
+    showToast(msg);
     drawBtn.classList.remove('charging');
     slogan.classList.remove('flash');
     state.isDrawing = false;
