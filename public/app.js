@@ -197,7 +197,7 @@ async function doDraw() {
       if (elapsed <= 5) {
         statusEl.textContent = 'AI 正在筛选基金' + '.'.repeat(elapsed % 4);
       } else if (elapsed <= 20) {
-        statusEl.textContent = '混元大模型生成推荐中 (' + elapsed + 's)';
+        statusEl.textContent = 'AI 生成推荐文案中 (' + elapsed + 's)';
       } else {
         statusEl.textContent = '仍在处理中，请稍候 (' + elapsed + 's)';
       }
