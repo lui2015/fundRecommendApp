@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>求一基 · 趣味抽签基金推荐</title>
-  <link rel="stylesheet" href="style.css?v=2026080626" />
+  <link rel="stylesheet" href="style.css?v=2026080627" />
 </head>
 <body>
   <!-- 科幻背景层 -->
@@ -50,8 +50,13 @@
     <!-- 结果提炼卡片 / 等待摇奖 -->
     <section class="wish-panel reveal" id="wishPanel">
       <div class="slot-status hidden" id="slotStatus">
-        <span class="slot-icon">&#127922;</span>
+        <div class="loading-icon-wrap">
+          <span class="slot-icon">&#127922;</span>
+          <span class="icon-orbit"></span>
+        </div>
         <span class="status-msg" id="statusMsg">等待摇奖…</span>
+        <span class="scan-bar"></span>
+        <div class="loading-particles" id="loadingParticles"></div>
       </div>
       <!-- 默认态：心 想 事 成 -->
       <div class="wish-text" id="wishText">心 想 事 成</div>
@@ -150,6 +155,6 @@
   <!-- 烟花绽放层 -->
   <canvas id="fireworks" class="fireworks-canvas"></canvas>
 
-  <script src="app.js?v=2026080626"></script>
+  <script src="app.js?v=2026080627"></script>
 </body>
 </html>

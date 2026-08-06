@@ -285,10 +285,97 @@ html, body {
 }
 @keyframes goldBreath { 0%,100%{ text-shadow:0 0 10px rgba(240,193,75,.2);} 50%{ text-shadow:0 0 22px rgba(240,193,75,.45);} }
 
-.slot-status { display: flex; align-items: center; gap: 10px; }
-.slot-icon { font-size: 32px; animation: spinSlow 2.4s linear infinite; }
-@keyframes spinSlow { to { transform: rotate(360deg); } }
-.status-msg { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: 2px; }
+/* ---- 等待摇奖（科幻加载态） ---- */
+.wish-panel.loading {
+  border-color: rgba(230,57,70,.35);
+  box-shadow:
+    0 0 20px rgba(230,57,70,.12),
+    inset 0 0 20px rgba(230,57,70,.04);
+  animation: panelPulse 2s ease-in-out infinite;
+}
+@keyframes panelPulse {
+  0%,100% { border-color: rgba(230,57,70,.25); box-shadow: 0 0 20px rgba(230,57,70,.08), inset 0 0 20px rgba(230,57,70,.03); }
+  50% { border-color: rgba(230,57,70,.55); box-shadow: 0 0 36px rgba(230,57,70,.22), inset 0 0 30px rgba(230,57,70,.06); }
+}
+
+.slot-status {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; padding: 18px 12px;
+  position: relative; overflow: hidden;
+}
+
+/* 骰子图标 + 轨道光环 */
+.loading-icon-wrap {
+  position: relative; width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.slot-icon {
+  font-size: 28px;
+  animation: iconBounce .8s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 8px rgba(240,193,75,.4));
+}
+@keyframes iconBounce {
+  from { transform: scale(.88) rotate(-6deg); }
+  to   { transform: scale(1.1) rotate(6deg); }
+}
+.icon-orbit {
+  position: absolute; inset: -5px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--red);
+  border-right-color: var(--gold);
+  animation: orbitSpin 1.2s linear infinite;
+}
+@keyframes orbitSpin { to { transform: rotate(360deg); } }
+
+/* 状态文字：渐变流光 */
+.status-msg {
+  font-size: 17px; font-weight: 700;
+  letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--red) 0%, var(--gold) 40%, var(--text) 60%, var(--gold) 80%, var(--red) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: textShimmer 2s ease-in-out infinite;
+  text-shadow: none;
+}
+@keyframes textShimmer {
+  0%,100% { background-position: 0% center; }
+  50% { background-position: 200% center; }
+}
+
+/* 扫描线 */
+.scan-bar {
+  position: absolute; left: 0; top: 0; width: 40%; height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(230,57,70,.06) 45%, rgba(255,255,255,.08) 50%, rgba(230,57,70,.06) 55%, transparent 100%);
+  animation: scanSweep 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes scanSweep {
+  0% { left: -40%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { left: 140%; opacity: 0; }
+}
+
+/* 浮动粒子（JS 动态生成） */
+.loading-particles {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.loading-particle {
+  position: absolute; width: 3px; height: 3px;
+  border-radius: 50%; opacity: 0;
+  animation: floatUp linear infinite;
+}
+@keyframes floatUp {
+  0%   { transform: translateY(20px) scale(0); opacity: 0; }
+  20%  { opacity: .7; }
+  80%  { opacity: .7; }
+  100% { transform: translateY(-25px) scale(1); opacity: 0; }
+}
 
 /* 结果提炼态 */
 .result-summary { width: 100%; animation: fadeUp .35s ease-out both; }

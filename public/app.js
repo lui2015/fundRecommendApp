@@ -61,10 +61,12 @@ function resetDigits() {
 
 function startSpin() {
   resetDigits();
-  // 显示等待摇奖
+  // 显示等待摇奖（科幻加载态）
   wishText.classList.add('hidden');
   slotStatus.classList.remove('hidden');
+  wishPanel.classList.add('loading');
   statusMsg.textContent = '等待摇奖…';
+  spawnLoadingParticles();
 
   const boxes = digitRow.querySelectorAll('.digit-box');
   boxes.forEach((box) => box.classList.add('rolling'));
@@ -99,6 +101,8 @@ function revealDigits(codeStr) {
       if (idx === codeStr.length - 1) {
         setTimeout(() => {
           slotStatus.classList.add('hidden');
+          wishPanel.classList.remove('loading');
+          clearLoadingParticles();
           // 不再默认显示"心 想 事 成"，等 renderResult 后才展示提炼卡片
           wishText.classList.add('hidden');
           // LED 全亮
@@ -140,6 +144,8 @@ function resetUI() {
   resetDigits();
   closeModal();
   slotStatus.classList.add('hidden');
+  wishPanel.classList.remove('loading');
+  clearLoadingParticles();
   wishText.classList.remove('hidden');
   wishText.textContent = '心 想 事 成';
   resultSummary.classList.add('hidden');
@@ -482,7 +488,31 @@ saveBtn.addEventListener('click', () => {
 });
 $('#refreshHistory').addEventListener('click', loadHistory);
 
-// ---- 漂浮粒子 ----
+// ---- 加载态浮动粒子 ----
+const loadingParticlesEl = document.getElementById('loadingParticles');
+function spawnLoadingParticles() {
+  if (!loadingParticlesEl) return;
+  clearLoadingParticles();
+  const frag = document.createDocumentFragment();
+  const colors = ['#e63946', '#f0c14b', '#4dabf7', '#fff'];
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'loading-particle';
+    p.style.left = (10 + Math.random() * 80) + '%';
+    p.style.bottom = (5 + Math.random() * 30) + '%';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (1.2 + Math.random() * 1.5) + 's';
+    p.style.animationDelay = (Math.random() * 2) + 's';
+    p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
+    frag.appendChild(p);
+  }
+  loadingParticlesEl.appendChild(frag);
+}
+function clearLoadingParticles() {
+  if (loadingParticlesEl) loadingParticlesEl.innerHTML = '';
+}
+
+// ---- 漂浮粒子（背景）----
 function initParticles() {
   if (!particlesEl) return;
   const N = 26;
