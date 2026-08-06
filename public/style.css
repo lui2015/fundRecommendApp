@@ -96,9 +96,11 @@ html, body {
 }
 
 /* ============ 入场 stagger ============ */
+/* 注意：不要在此静态声明 opacity/transform，否则一旦其他规则用 animation 简写
+   覆盖本动画（如 .wish-panel.has-result 的 breathe），元素会回落到 opacity:0 而隐形。
+   初始态交由关键帧 + both 填充承载，保证任何覆盖后都回落到「可见」。 */
 .reveal {
-  opacity: 0; transform: translateY(18px);
-  animation: floatIn .8s cubic-bezier(.22,1,.36,1) forwards;
+  animation: floatIn .8s cubic-bezier(.22,1,.36,1) both;
 }
 .slogan.reveal { animation-delay: .08s; }
 .slot-machine.reveal { animation-delay: .16s; }
@@ -106,7 +108,10 @@ html, body {
 .filter-panel.reveal { animation-delay: .32s; }
 .action-row.reveal { animation-delay: .40s; }
 .disclaimer.reveal { animation-delay: .48s; }
-@keyframes floatIn { to { opacity: 1; transform: none; } }
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
 
 .app {
   position: relative; z-index: 1;
@@ -262,6 +267,7 @@ html, body {
 }
 .wish-panel.has-result {
   cursor: pointer;
+  opacity: 1; /* 兜底：防止被入场动画的初始态影响 */
   border-color: rgba(230,57,70,.3);
   animation: breathe 3.4s ease-in-out infinite;
 }
@@ -285,7 +291,11 @@ html, body {
 .status-msg { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: 2px; }
 
 /* 结果提炼态 */
-.result-summary { width: 100%; animation: fadeUp .35s ease-out; }
+.result-summary { width: 100%; animation: fadeUp .35s ease-out both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
 .summary-head { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-bottom: 6px; }
 .summary-fund-name { font-size: 17px; font-weight: 800; color: var(--text); line-height: 1.35; }
 .summary-code {
