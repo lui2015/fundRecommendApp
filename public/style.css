@@ -177,12 +177,60 @@ html, body {
   width: 100%;
   animation: fadeUp .35s ease-out;
 }
+.summary-head {
+  display: flex; align-items: baseline; justify-content: center;
+  gap: 10px; margin-bottom: 6px;
+}
 .summary-fund-name {
-  font-size: 18px; font-weight: 800; color: var(--text);
-  line-height: 1.35; margin-bottom: 6px;
+  font-size: 17px; font-weight: 800; color: var(--text);
+  line-height: 1.35;
+}
+.summary-code {
+  font-family: var(--font-mono);
+  font-size: 12px; color: var(--text3);
+  background: rgba(255,255,255,.05);
+  padding: 2px 8px; border-radius: 6px;
+  letter-spacing: 1px;
+}
+.summary-tags {
+  display: flex; gap: 6px; justify-content: center;
+  flex-wrap: wrap; margin-bottom: 8px;
+}
+.summary-tag {
+  display: inline-block; padding: 2px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 600; letter-spacing: .5px;
+}
+.summary-tag-type { background: rgba(240,193,75,.12); color: var(--gold); border: 1px solid rgba(240,193,75,.2); }
+.summary-tag-source { background: rgba(46,204,113,.1); color: var(--green); border: 1px solid rgba(46,204,113,.18); }
+.summary-tag-mock { background: rgba(240,193,75,.1); color: var(--gold-dim); border: 1px solid rgba(240,193,75,.18); }
+
+/* 关键指标行 */
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 10px 8px;
+  background: rgba(255,255,255,.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.05);
+}
+.summary-metric {
+  text-align: center;
+}
+.summary-metric-value {
+  font-size: 15px; font-weight: 800;
+  font-family: var(--font-mono);
+  line-height: 1.2;
+}
+.summary-metric-value.pos { color: var(--red); }
+.summary-metric-value.neg { color: var(--green); }
+.summary-metric-label {
+  font-size: 10px; color: var(--text3);
+  margin-top: 2px; letter-spacing: .5px;
 }
 .summary-oneliner {
-  font-size: 14px; font-weight: 600; color: var(--red);
+  font-size: 13px; font-weight: 600; color: var(--red);
   line-height: 1.5; margin-bottom: 6px;
 }
 .summary-hint {
@@ -529,4 +577,6 @@ html, body {
   .slogan { font-size: 16px; letter-spacing: 4px; }
   .draw-btn { font-size: 15px; letter-spacing: 3px; }
   .res-fund-name { font-size: 17px; }
+  .summary-fund-name { font-size: 15px; }
+  .summary-metric-value { font-size: 13px; }
 }

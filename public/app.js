@@ -23,6 +23,9 @@ const modalClose = $('#modalClose');
 const modalBody = $('#modalBody');
 const resultSummary = $('#resultSummary');
 const summaryFundName = $('#summaryFundName');
+const summaryCode = $('#summaryCode');
+const summaryTags = $('#summaryTags');
+const summaryMetrics = $('#summaryMetrics');
 const summaryOneliner = $('#summaryOneliner');
 const historyList = $('#historyList');
 const toastEl = $('#toast');
@@ -230,6 +233,31 @@ function renderResult(data) {
   // 填充提炼卡片（在 wishPanel 区域）
   const oneLiner = r ? (r.oneLiner || '') : (raw ? raw : '');
   summaryFundName.textContent = f.name || '未知基金';
+  summaryCode.textContent = f.code || '';
+  // 标签：类型 + 数据源
+  const tagHtml = [
+    `<span class="summary-tag summary-tag-type">${escapeHtml(f.type || '--')}</span>`,
+    data.isMock
+      ? `<span class="summary-tag summary-tag-mock">示例数据</span>`
+      : `<span class="summary-tag summary-tag-source">${escapeHtml(data.dataSource || '实时')}</span>`,
+  ].join('');
+  summaryTags.innerHTML = tagHtml;
+  // 关键指标行：近3年收益 / 费率 / 成立年限
+  const r3yVal = m.r3y;
+  const r3yClass = Number(r3yVal) >= 0 ? 'pos' : (Number(r3yVal) < 0 ? 'neg' : '');
+  summaryMetrics.innerHTML = `
+    <div class="summary-metric">
+      <div class="summary-metric-value ${r3yClass}">${fmt(r3yVal)}</div>
+      <div class="summary-metric-label">近3年收益</div>
+    </div>
+    <div class="summary-metric">
+      <div class="summary-metric-value">${fmt(m.fee)}</div>
+      <div class="summary-metric-label">费率</div>
+    </div>
+    <div class="summary-metric">
+      <div class="summary-metric-value">${m.years != null ? m.years : '--'}<small style="font-size:10px;color:var(--text3)">年</small></div>
+      <div class="summary-metric-label">成立年限</div>
+    </div>`;
   summaryOneliner.textContent = oneLiner || (f.type || '') + '型基金';
   resultSummary.classList.remove('hidden');
   wishText.classList.add('hidden');
