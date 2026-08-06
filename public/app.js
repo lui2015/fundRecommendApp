@@ -505,35 +505,34 @@ function initParticles() {
   particlesEl.appendChild(frag);
 }
 
-// ---- 烟花绽放效果 ----
+// ---- 烟花绽放效果（轻量版，避免卡顿）----
 const fwCanvas = document.getElementById('fireworks');
 let fwCtx = null, fwRaf = null, fwParticles = [], fwRunning = false;
-const FW_COLORS = ['#e63946', '#f0c14b', '#2ecc71', '#4dabf7', '#ff7eb6', '#fff'];
+const FW_COLORS = ['#e63946', '#f0c14b', '#2ecc71', '#4dabf7', '#ff7eb6'];
 
 function resizeFw() {
   if (!fwCanvas) return;
-  const dpr = window.devicePixelRatio || 1;
-  fwCanvas.width = window.innerWidth * dpr;
-  fwCanvas.height = window.innerHeight * dpr;
+  // 不用 devicePixelRatio，用固定低分辨率避免高 DPI 卡顿
+  fwCanvas.width = window.innerWidth;
+  fwCanvas.height = window.innerHeight;
   fwCtx = fwCanvas.getContext('2d');
-  fwCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function spawnBurst(cx, cy) {
-  const n = 36 + Math.floor(Math.random() * 24);
+  const n = 18; // 减少粒子数
   const color = FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)];
-  const power = 2 + Math.random() * 2.5;
+  const power = 1.8 + Math.random() * 1.8;
   for (let i = 0; i < n; i++) {
-    const ang = (Math.PI * 2 * i) / n + Math.random() * 0.3;
-    const sp = power * (0.5 + Math.random());
+    const ang = (Math.PI * 2 * i) / n + (Math.random() - 0.5) * 0.4;
+    const sp = power * (0.4 + Math.random() * 0.8);
     fwParticles.push({
       x: cx, y: cy,
       vx: Math.cos(ang) * sp,
-      vy: Math.sin(ang) * sp - 0.6,
+      vy: Math.sin(ang) * sp - 0.4,
       life: 1,
-      decay: 0.012 + Math.random() * 0.012,
-      color: Math.random() > 0.7 ? FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)] : color,
-      size: 1.5 + Math.random() * 2,
+      decay: 0.018 + Math.random() * 0.01, // 更快衰减
+      color: Math.random() > 0.6 ? FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)] : color,
+      size: 1.2 + Math.random() * 1.6,
     });
   }
 }
@@ -541,25 +540,22 @@ function spawnBurst(cx, cy) {
 function fwLoop() {
   if (!fwCtx) return;
   fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
-  fwCtx.globalCompositeOperation = 'lighter';
+  // 不用 lighter 混合（太耗性能），改用 source-over + 半透明
   for (let i = fwParticles.length - 1; i >= 0; i--) {
     const p = fwParticles[i];
     p.x += p.vx; p.y += p.vy;
-    p.vy += 0.045;            // 重力
-    p.vx *= 0.99; p.vy *= 0.99;
+    p.vy += 0.055;
+    p.vx *= 0.985; p.vy *= 0.985;
     p.life -= p.decay;
     if (p.life <= 0) { fwParticles.splice(i, 1); continue; }
-    fwCtx.beginPath();
-    fwCtx.globalAlpha = Math.max(0, p.life);
+    const a = Math.max(0, p.life * 0.85);
+    fwCtx.globalAlpha = a;
     fwCtx.fillStyle = p.color;
-    fwCtx.shadowBlur = 12;
-    fwCtx.shadowColor = p.color;
-    fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    fwCtx.beginPath();
+    fwCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); // 随生命值缩小
     fwCtx.fill();
   }
   fwCtx.globalAlpha = 1;
-  fwCtx.shadowBlur = 0;
-  fwCtx.globalCompositeOperation = 'source-over';
   if (fwParticles.length > 0 || fwRunning) {
     fwRaf = requestAnimationFrame(fwLoop);
   } else {
@@ -572,25 +568,24 @@ function launchFireworks() {
   if (!fwCanvas) return;
   if (!fwCtx) resizeFw();
   fwCanvas.classList.add('active');
-  // 多次绽放
+  // 3 次绽放（减少次数）
   const bursts = [
-    { t: 0,   x: 0.25, y: 0.35 },
-    { t: 180, x: 0.75, y: 0.30 },
-    { t: 360, x: 0.50, y: 0.22 },
-    { t: 540, x: 0.30, y: 0.45 },
-    { t: 720, x: 0.70, y: 0.48 },
+    { t: 0,   x: 0.30, y: 0.35 },
+    { t: 220, x: 0.70, y: 0.28 },
+    { t: 440, x: 0.50, y: 0.20 },
   ];
+  let started = false;
   bursts.forEach(b => {
     setTimeout(() => {
       spawnBurst(window.innerWidth * b.x, window.innerHeight * b.y);
-      if (!fwRunning) { fwRunning = true; fwLoop(); }
+      if (!started) { started = true; fwRunning = true; fwLoop(); }
     }, b.t);
   });
   // 收尾清理
   setTimeout(() => {
     fwRunning = false;
     if (fwParticles.length === 0) fwCanvas.classList.remove('active');
-  }, 1600);
+  }, 1200);
 }
 
 window.addEventListener('resize', () => { if (fwCtx) resizeFw(); });
