@@ -31,7 +31,7 @@ const historyList = $('#historyList');
 const toastEl = $('#toast');
 const drawer = $('#drawer');
 const drawerOverlay = $('#drawerOverlay');
-const slogan = $('#slogan');
+const slogan = document.querySelector('.slogan');
 const particlesEl = $('#particles');
 
 // ---- Toast ----
@@ -107,7 +107,7 @@ function revealDigits(codeStr) {
           });
           // 移除蓄能动效
           drawBtn.classList.remove('charging');
-          slogan.classList.remove('flash');
+          if (slogan) slogan.classList.remove('flash');
         }, 300);
       }
     }, remaining);
@@ -146,7 +146,7 @@ function resetUI() {
   wishPanel.classList.remove('has-result');
   wishPanel.onclick = null;
   drawBtn.classList.remove('charging');
-  slogan.classList.remove('flash');
+  if (slogan) slogan.classList.remove('flash');
   state.isDrawing = false;
   drawBtn.disabled = false;
   saveBtn.disabled = true;
@@ -178,29 +178,33 @@ async function doDraw() {
   wishPanel.onclick = null;
 
   startSpin();
-  drawBtn.classList.add('charging');
-  slogan.classList.add('flash');
-
-  // 请求中：显示已等待时间
-  let elapsed = 0;
-  const statusEl = $('#statusMsg');
-  statusEl.textContent = 'AI 正在筛选基金…';
-  drawTimer = setInterval(() => {
-    elapsed++;
-    if (elapsed <= 5) {
-      statusEl.textContent = 'AI 正在筛选基金' + '.'.repeat(elapsed % 4);
-    } else if (elapsed <= 20) {
-      statusEl.textContent = '混元大模型生成推荐中 (' + elapsed + 's)';
-    } else {
-      statusEl.textContent = '仍在处理中，请稍候 (' + elapsed + 's)';
-    }
-  }, 1000);
 
   // 超时保护：60s 后自动取消
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 60000);
+  let timer = null;
 
   try {
+    drawBtn.classList.add('charging');
+    if (slogan) slogan.classList.add('flash');
+
+    // 请求中：显示已等待时间
+    let elapsed = 0;
+    const statusEl = $('#statusMsg');
+    if (statusEl) statusEl.textContent = 'AI 正在筛选基金…';
+    drawTimer = setInterval(() => {
+      elapsed++;
+      if (!statusEl) return;
+      if (elapsed <= 5) {
+        statusEl.textContent = 'AI 正在筛选基金' + '.'.repeat(elapsed % 4);
+      } else if (elapsed <= 20) {
+        statusEl.textContent = '混元大模型生成推荐中 (' + elapsed + 's)';
+      } else {
+        statusEl.textContent = '仍在处理中，请稍候 (' + elapsed + 's)';
+      }
+    }, 1000);
+
+    timer = setTimeout(() => ctrl.abort(), 60000);
+
     const resp = await fetch('api/draw?v=' + Date.now(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
