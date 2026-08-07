@@ -384,8 +384,8 @@ function renderResult(data) {
   wishText.classList.add('hidden');
   wishPanel.classList.add('has-result');
 
-  // 点击提炼卡片 → 弹出详情弹框
-  wishPanel.onclick = () => openModal();
+  // 点击提炼卡片 → 跳转详情页（整合弹窗分析+图表）
+  wishPanel.onclick = () => openDetail(data);
 
   // 自选按钮状态
   renderFavBtn(f.code);
@@ -429,8 +429,7 @@ function renderResult(data) {
   // 绑定事件（弹框内按钮）
   document.querySelectorAll('#againBtn').forEach(b => b.addEventListener('click', doDraw));
   document.querySelectorAll('#detailBtn').forEach(b => b.addEventListener('click', () => {
-    if (data._savedId) window.open('api/reports/' + data._savedId, '_blank');
-    else saveResult(data, true);
+    openDetail(data);
   }));
 
   state.isDrawing = false;
@@ -495,8 +494,28 @@ async function loadHistory() {
     historyList.querySelectorAll('button[data-act]').forEach((b) => {
       b.addEventListener('click', () => {
         const id = b.dataset.id;
-        if (b.dataset.act === 'open') window.open('api/reports/' + id, '_blank');
-        else delHistory(id);
+        if (b.dataset.act === 'open') {
+          // 跳转详情页：先拉取记录数据
+          fetch('api/history/' + id)
+            .then(r => r.json())
+            .then(row => {
+              try {
+                const detailData = {
+                  fund: { code: row.fund_code, name: row.fund_name, type: row.fund_type },
+                  metrics: JSON.parse(row.metrics || '{}'),
+                  reason: JSON.parse(row.reason || '{}'),
+                  dataSource: row.data_source,
+                  usedDefaults: JSON.parse(row.used_defaults || '{}'),
+                  isMock: false,
+                };
+                sessionStorage.setItem('fundDetailData', JSON.stringify(detailData));
+                window.location.href = 'detail.html';
+              } catch (e) {
+                window.open('api/reports/' + id, '_blank');
+              }
+            })
+            .catch(() => window.open('api/reports/' + id, '_blank'));
+        } else delHistory(id);
       });
     });
   } catch (e) {
@@ -513,7 +532,19 @@ async function delHistory(id) {
   } catch (e) { showToast('删除失败'); }
 }
 
-// ---- 详情弹框（Modal） ----
+// ---- 跳转详情页（整合弹窗+报告） ----
+function openDetail(data) {
+  try {
+    sessionStorage.setItem('fundDetailData', JSON.stringify(data));
+    window.location.href = 'detail.html';
+  } catch (e) {
+    // sessionStorage 可能满，降级为弹窗
+    console.warn('sessionStorage full, fallback to modal:', e);
+    openModal();
+  }
+}
+
+// ---- 详情弹框（Modal）—— 保留作为降级方案 ----
 let isModalOpen = false;
 function openModal() {
   if (isModalOpen) return;
