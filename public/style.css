@@ -570,7 +570,55 @@ html, body {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: none; }
 }
-.summary-head { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-bottom: 6px; }
+.summary-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.summary-head > div { text-align: center; flex: 1; min-width: 0; }
+
+/* 自选按钮 */
+.fav-btn {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: rgba(255,255,255,.04);
+  color: var(--text3); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .25s; line-height: 1; padding: 0;
+}
+.fav-btn:hover { border-color: var(--gold); color: var(--gold); transform: scale(1.1); }
+.fav-btn.on {
+  color: var(--gold); border-color: var(--gold);
+  background: rgba(240,193,75,.12);
+  text-shadow: 0 0 10px rgba(240,193,75,.5);
+  animation: favPop .35s ease;
+}
+@keyframes favPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* 自选列表 */
+.fav-head {
+  cursor: pointer; user-select: none; list-style: none;
+  padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;
+  font-size: 14px; font-weight: 700; color: var(--text2);
+  transition: color .2s;
+}
+.fav-head::-webkit-details-marker { display: none; }
+.fav-head::after {
+  content: '▸'; font-size: 12px; color: var(--text3); transition: transform .25s;
+}
+.drawer-section[open] > .fav-head { color: var(--gold); }
+.drawer-section[open] > .fav-head::after { transform: rotate(90deg); color: var(--gold); }
+.fav-count {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  color: var(--gold); background: rgba(240,193,75,.14); border: 1px solid rgba(240,193,75,.25);
+}
+.fav-list { list-style: none; padding: 0 14px 12px; }
+.fav-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.fav-item:last-child { border-bottom: none; }
+.fav-name { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.fav-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .summary-fund-name { font-size: 17px; font-weight: 800; color: var(--text); line-height: 1.35; }
 .summary-code {
   font-family: var(--font-mono); font-size: 12px; color: var(--text3);

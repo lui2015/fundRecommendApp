@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>求一基 · 趣味抽签基金推荐</title>
-  <link rel="stylesheet" href="style.css?v=2026080713" />
+  <link rel="stylesheet" href="style.css?v=2026080714" />
 </head>
 <body>
   <!-- 科幻背景层 -->
@@ -64,8 +64,11 @@
       <!-- 结果提炼态（抽签后显示，点击展开详情） -->
       <div class="result-summary hidden" id="resultSummary">
         <div class="summary-head">
-          <div class="summary-fund-name" id="summaryFundName"></div>
-          <div class="summary-code" id="summaryCode"></div>
+          <div>
+            <div class="summary-fund-name" id="summaryFundName"></div>
+            <div class="summary-code" id="summaryCode"></div>
+          </div>
+          <button class="fav-btn" id="favBtn" title="加入自选" aria-label="加入自选">&#9734;</button>
         </div>
         <div class="summary-tags" id="summaryTags"></div>
         <div class="summary-metrics" id="summaryMetrics"></div>
@@ -149,6 +152,15 @@
       </summary>
       <ul id="historyList" class="history-list"></ul>
     </details>
+
+    <!-- 自选基金（默认收起） -->
+    <details class="drawer-section" id="drawerFavSection">
+      <summary class="fav-head">
+        <span>&#9733; 自选基金</span>
+        <span class="fav-count" id="favCount">0</span>
+      </summary>
+      <ul id="favList" class="fav-list"></ul>
+    </details>
   </aside>
 
   <!-- 选基攻略弹框-->
@@ -204,7 +216,7 @@
   <!-- 烟花绽放层 -->
   <canvas id="fireworks" class="fireworks-canvas"></canvas>
 
-  <script src="app.js?v=2026080713"></script>
-  <script src="strategy.js?v=2026080713"></script>
+  <script src="app.js?v=2026080714"></script>
+  <script src="strategy.js?v=2026080714"></script>
 </body>
 </html>

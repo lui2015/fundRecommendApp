@@ -8,6 +8,57 @@ const state = {
   lastResult: null, isDrawing: false
 };
 
+// ---- 自选基金（localStorage） ----
+const FAV_KEY = 'fund_fav_v1';
+function getFavs() { try { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch { return []; } }
+function saveFavs(arr) { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); }
+function isFav(code) { return getFavs().some(f => f.code === code); }
+function toggleFav(fund, metrics) {
+  const favs = getFavs();
+  const idx = favs.findIndex(f => f.code === fund.code);
+  if (idx >= 0) { favs.splice(idx, 1); showToast('已取消自选'); }
+  else {
+    if (favs.length >= 20) { showToast('自选最多 20 只，请先移除一些'); return false; }
+    favs.unshift({ code: fund.code, name: fund.name, type: fund.type, fee: (metrics || {}).fee, r3y: (metrics || {}).r3y, years: (metrics || {}).years, addedAt: Date.now() });
+    showToast('已加入自选 &#9733;');
+  }
+  saveFavs(favs); renderFavBtn(fund.code); renderFavList(); return true;
+}
+function renderFavBtn(code) {
+  const btn = $('#favBtn');
+  if (!btn) return;
+  const active = isFav(code);
+  btn.textContent = active ? '&#9733;' : '&#9734;';
+  btn.classList.toggle('on', active);
+  btn.title = active ? '取消自选' : '加入自选';
+}
+function renderFavList() {
+  const list = $('#favList');
+  const countEl = $('#favCount');
+  if (!list) return;
+  const favs = getFavs();
+  if (countEl) countEl.textContent = favs.length;
+  if (!favs.length) { list.innerHTML = '<li class="empty-state">还没有自选，抽签后点 &#9734; 收藏</li>'; return; }
+  list.innerHTML = favs.map((f) => `
+    <li class="fav-item">
+      <div class="fav-info">
+        <div class="fav-name">${escapeHtml(f.name || '')}</div>
+        <div class="fav-meta">${escapeHtml(f.code || '')} · ${escapeHtml(f.type || '')}${f.fee != null ? ' · 费率' + fmt(f.fee) : ''}</div>
+      </div>
+      <button class="mini-btn del" data-fav-del="${escapeHtml(f.code)}">移除</button>
+    </li>`).join('');
+  list.querySelectorAll('[data-fav-del]').forEach(b => {
+    b.addEventListener('click', () => {
+      const code = b.dataset.favDel;
+      const favs = getFavs().filter(f => f.code !== code);
+      saveFavs(favs);
+      renderFavBtn(code);
+      renderFavList();
+      showToast('已移除自选');
+    });
+  });
+}
+
 // ---- DOM 引用 ----
 const $ = (sel) => document.querySelector(sel);
 const drawBtn = $('#drawBtn');
@@ -29,6 +80,8 @@ const summaryMetrics = $('#summaryMetrics');
 const summaryOneliner = $('#summaryOneliner');
 const historyList = $('#historyList');
 const toastEl = $('#toast');
+const favBtn = $('#favBtn');
+const favList = $('#favList');
 const drawer = $('#drawer');
 const drawerOverlay = $('#drawerOverlay');
 const slogan = document.querySelector('.slogan');
@@ -334,6 +387,12 @@ function renderResult(data) {
   // 点击提炼卡片 → 弹出详情弹框
   wishPanel.onclick = () => openModal();
 
+  // 自选按钮状态
+  renderFavBtn(f.code);
+  if (favBtn) {
+    favBtn.onclick = () => { toggleFav(f, m); };
+  }
+
   // 烟花绽放庆祝
   launchFireworks();
 
@@ -491,6 +550,14 @@ const historySection = $('#drawerHistorySection');
 if (historySection) {
   historySection.addEventListener('toggle', () => {
     if (historySection.open) loadHistory();
+  });
+}
+
+// 自选列表懒加载
+const favSection = $('#drawerFavSection');
+if (favSection) {
+  favSection.addEventListener('toggle', () => {
+    if (favSection.open) renderFavList();
   });
 }
 // ESC 关闭（优先弹框 > 抽屉）
@@ -666,3 +733,4 @@ window.addEventListener('resize', () => { if (fwCtx) resizeFw(); });
 
 // ---- 初始化 ----
 initParticles();
+renderFavList(); // 渲染自选计数（列表懒加载）
