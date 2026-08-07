@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>求一基 · 趣味抽签基金推荐</title>
-  <link rel="stylesheet" href="style.css?v=2026080627" />
+  <link rel="stylesheet" href="style.css?v=2026080710" />
 </head>
 <body>
   <!-- 科幻背景层 -->
@@ -139,6 +139,10 @@
       <a class="drawer-item active" id="menuHistory" href="#">
         <span class="drawer-icon">&#128220;</span> 抽签记录
       </a>
+      <a class="drawer-item" id="menuStrategy" href="#">
+        <span class="drawer-icon">&#128218;</span> 选基攻略
+        <span class="drawer-badge">NEW</span>
+      </a>
     </nav>
     <!-- 抽签记录内容区 -->
     <section class="drawer-section" id="drawerHistorySection">
@@ -150,12 +154,60 @@
     </section>
   </aside>
 
+  <!-- 选基攻略弹框-->
+  <div class="modal-overlay" id="stgOverlay"></div>
+  <div class="modal modal-lg" id="stgModal">
+    <div class="stg-topbar">
+      <button class="stg-back hidden" id="stgBack" aria-label="返回">&#8592;</button>
+      <div class="stg-titlewrap">
+        <div class="stg-title" id="stgTitle">选基攻略</div>
+        <div class="stg-sub" id="stgSub">经典策略盘点· 选一套，AI 帮你落地</div>
+      </div>
+      <button class="modal-close stg-close" id="stgClose" aria-label="关闭">&times;</button>
+    </div>
+
+    <!-- 步骤 1：策略盘点 -->
+    <div class="stg-step" id="stgStepList">
+      <div class="stg-tabs" id="stgTabs"></div>
+      <div class="stg-list" id="stgList"></div>
+    </div>
+
+    <!-- 步骤 2：信息补充 -->
+    <div class="stg-step hidden" id="stgStepForm">
+      <div class="stg-form-head">
+        <div class="stg-form-name" id="stgFormName"></div>
+        <div class="stg-form-tip" id="stgFormTip"></div>
+      </div>
+      <form class="stg-form" id="stgForm"></form>
+      <div class="stg-actions">
+        <button class="res-btn res-btn-ghost" type="button" id="stgFormBack">&#8592; 换个策略</button>
+        <button class="res-btn res-btn-primary" type="button" id="stgSubmit">&#10024; 生成选基方案</button>
+      </div>
+      <div class="stg-form-note">AI 会结合真实基金数据与你的补充信息生成方案，用时约 20-40 秒。</div>
+    </div>
+
+    <!-- 步骤 3：加载中 -->
+    <div class="stg-step hidden" id="stgStepLoading">
+      <div class="stg-loading">
+        <div class="stg-loading-ring"></div>
+        <div class="stg-loading-text" id="stgLoadingText">正在按策略筛选基金…</div>
+        <div class="stg-loading-steps" id="stgLoadingSteps"></div>
+      </div>
+    </div>
+
+    <!-- 步骤 4：方案结果 -->
+    <div class="stg-step hidden" id="stgStepResult">
+      <div class="stg-result" id="stgResult"></div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <!-- 烟花绽放层 -->
   <canvas id="fireworks" class="fireworks-canvas"></canvas>
 
-  <script src="app.js?v=2026080627"></script>
+  <script src="app.js?v=2026080710"></script>
+  <script src="strategy.js?v=2026080710"></script>
 </body>
 </html>

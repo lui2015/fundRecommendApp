@@ -5,6 +5,8 @@ const config = require('./src/config');
 const db = require('./src/db');
 const { draw } = require('./src/draw');
 const { generateReport } = require('./src/report');
+const { CATEGORIES, COMMON_FIELDS, listStrategies } = require('./src/strategies');
+const { recommendByStrategy } = require('./src/strategyRecommend');
 
 const app = express();
 app.use(express.json());
@@ -44,6 +46,28 @@ app.post('/api/draw', rateLimit, async (req, res) => {
   } catch (e) {
     console.error('draw error:', e);
     res.status(500).json({ error: '抽签失败：' + (e.message || e) });
+  }
+});
+
+// 选基攻略：策略盘点清单
+app.get('/api/strategies', (req, res) => {
+  res.json({
+    categories: CATEGORIES,
+    commonFields: COMMON_FIELDS,
+    strategies: listStrategies(),
+  });
+});
+
+// 选基攻略：按选定策略 + 补充信息生成推荐方案
+app.post('/api/strategy/recommend', rateLimit, async (req, res) => {
+  try {
+    const { strategyId, common, extra, sort } = req.body || {};
+    const result = await recommendByStrategy({ strategyId, common, extra, sort });
+    res.json(result);
+  } catch (e) {
+    const status = e.status || 500;
+    if (status === 500) console.error('strategy recommend error:', e);
+    res.status(status).json({ error: (status === 400 ? '' : '生成方案失败：') + (e.message || e) });
   }
 });
 
