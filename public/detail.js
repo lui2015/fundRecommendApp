@@ -1,6 +1,6 @@
 /* ============================================
-   求一基 · 详情页渲染（整合弹窗分析 + 报告图表）
-   数据来源：sessionStorage('fundDetailData')
+   求一基 · 详情页渲染（整合弹窗分析 + 报告图表 + 补充数据）
+   数据来源：sessionStorage('fundDetailData') + /api/fund-detail/:code
    ============================================ */
 
 const $ = (sel) => document.querySelector(sel);
@@ -11,7 +11,7 @@ function esc(s) {
 }
 
 function fmt(v, suffix = '%') {
-  return (v === null || v === undefined) ? '--' : `${v}${suffix}`;
+  return (v === null || v === undefined || v === '') ? '--' : `${v}${suffix}`;
 }
 
 function listHtml(arr, fb) {
@@ -41,12 +41,184 @@ function buildChart(metrics) {
     bars += `<rect x="${x}" y="${y}" width="${Math.max(len, 2)}" height="${barH}" rx="4" fill="${color}" opacity=".88"/>`;
     bars += `<text x="${v >= 0 ? x - 6 : x + len + 6}" y="${y + barH / 2 + 4}" font-size="12" fill="${color}" text-anchor="${v >= 0 ? 'end' : 'start'}">${v}%</text>`;
   });
-  // 零轴
   bars += `<line x1="${zeroX}" y1="2" x2="${zeroX}" y2="${h - 4}" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>`;
   return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="业绩走势" style="max-height:${h}px">${bars}</svg>`;
 }
 
+/* ---- 补充详情区块渲染 ---- */
+function renderExtraInfo(extra) {
+  const container = $('#extraInfo');
+  if (!container || !extra) return;
+
+  let html = '';
+
+  // 基金规模
+  if (extra.fundScale || extra.scaleHistory) {
+    let scaleRows = '';
+    if (extra.scaleHistory && extra.scaleHistory.length) {
+      scaleRows = extra.scaleHistory.slice().reverse().map(s =>
+        `<tr><td>${esc(s.date)}</td><td>${s.scale != null ? s.scale + ' 亿' : '--'}</td></tr>`
+      ).join('');
+      // 取最新规模
+      const latest = extra.scaleHistory[extra.scaleHistory.length - 1];
+      html += `
+        <div class="detail-section">
+          <div class="section-title"><span class="num">④</span> 基金规模</div>
+          <table class="metrics-table">
+            <tr><td>最新规模（${esc(latest.date)}）</td>
+              <td class="val-pos">${latest.scale != null ? latest.scale + ' 亿元' : '--'}</td></tr>
+          </table>
+          <div style="margin-top:10px;font-size:12px;color:var(--text3)">历史规模走势</div>
+          <table class="metrics-table" style="margin-top:4px">${scaleRows}</table>
+        </div>`;
+    } else if (extra.fundScale) {
+      html += `
+        <div class="detail-section">
+          <div class="section-title"><span class="num">④</span> 基金规模</div>
+          <table class="metrics-table">
+            <tr><td>基金规模</td><td>${esc(extra.fundScale)}</td></tr>
+          </table>
+        </div>`;
+    }
+  }
+
+  // 基金经理
+  if (extra.managers && extra.managers.length) {
+    const mgrHtml = extra.managers.map(mgr => `
+      <div class="mgr-card">
+        <div class="mgr-name">${esc(mgr.name)}</div>
+        <div class="mgr-meta">
+          任职起：${esc(mgr.startDate)}
+          ${mgr.experience ? ` · 从业年限：${esc(mgr.experience)}` : ''}
+        </div>
+        <div class="mgr-meta">
+          管理基金数：${esc(mgr.totalFundCount || '--')}
+          ${mgr.returnInOffice ? ` · 任期回报：<b class="val-pos">${esc(mgr.returnInOffice)}</b>` : ''}
+        </div>
+      </div>`).join('');
+    html += `
+      <div class="detail-section">
+        <div class="section-title"><span class="num">⑤</span> 基金经理（${extra.managers.length}人）</div>
+        <div class="mgr-list">${mgrHtml}</div>
+      </div>`;
+  }
+
+  // 资产配置
+  if (extra.assetAllocation && extra.assetAllocation.length) {
+    const assetTotal = extra.assetAllocation.reduce((sum, a) => sum + (parseFloat(a.percent) || 0), 0);
+    const maxAsset = Math.max(...extra.assetAllocation.map(a => parseFloat(a.percent) || 0), 1);
+    const assetHtml = extra.assetAllocation.map(a => {
+      const pct = parseFloat(a.percent) || 0;
+      const barW = Math.max(pct / maxAsset * 100, pct > 0 ? 4 : 0);
+      return `
+        <div class="asset-row">
+          <span class="asset-label">${esc(a.type)}</span>
+          <div class="asset-bar-wrap">
+            <div class="asset-bar" style="width:${barW}%"></div>
+          </div>
+          <span class="asset-pct">${fmt(a.percent)}</span>
+        </div>`;
+    }).join('');
+    html += `
+      <div class="detail-section">
+        <div class="section-title"><span class="num">⑥</span> 资产配置</div>
+        <div class="asset-list">${assetHtml}</div>
+      </div>`;
+  }
+
+  // 行业配置
+  if (extra.industryAllocation && extra.industryAllocation.length) {
+    const topIndustries = extra.industryAllocation.slice(0, 8);
+    const indMax = Math.max(...topIndustries.map(i => parseFloat(i.percent) || 0), 1);
+    const indHtml = topIndustries.map(i => {
+      const pct = parseFloat(i.percent) || 0;
+      const barW = Math.max(pct / indMax * 100, pct > 0 ? 4 : 0);
+      return `
+        <div class="asset-row">
+          <span class="asset-label">${esc(i.name)}</span>
+          <div class="asset-bar-wrap">
+            <div class="asset-bar ind-bar" style="width:${barW}%"></div>
+          </div>
+          <span class="asset-pct">${fmt(i.percent)}</span>
+        </div>`;
+    }).join('');
+    html += `
+      <div class="detail-section">
+        <div class="section-title"><span class="num">⑦</span> 行业配置（前${topIndustries.length}）</div>
+        <div class="asset-list">${indHtml}</div>
+      </div>`;
+  }
+
+  // 前十大持仓
+  if (extra.topHoldings && extra.topHoldings.length) {
+    const holdHtml = extra.topHoldings.map(h => `
+      <tr>
+        <td>${esc(h.name)}</td>
+        <td class="hold-code">${esc(h.code)}</td>
+        <td class="val-pos">${fmt(h.percent)}</td>
+      </tr>`).join('');
+    html += `
+      <div class="detail-section">
+        <div class="section-title"><span class="num">⑧</span> 前十大持仓</div>
+        <table class="metrics-table hold-table">
+          <thead><tr><th>名称</th><th>代码</th><th>占比</th></tr></thead>
+          <tbody>${holdHtml}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // 债券持仓
+  if (extra.bondHoldings && extra.bondHoldings.length) {
+    const bondHtml = extra.bondHoldings.map(b => `
+      <tr>
+        <td>${esc(b.name)}</td>
+        <td class="hold-code">${esc(b.code)}</td>
+        <td class="val-pos">${fmt(b.percent)}</td>
+      </tr>`).join('');
+    html += `
+      <div class="detail-section">
+        <div class="section-title"><span class="num">⑨</span> 前五大债券持仓</div>
+        <table class="metrics-table hold-table">
+          <thead><tr><th>债券名称</th><th>代码</th><th>占比</th></tr></thead>
+          <tbody>${bondHtml}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // 实时估值补充
+  if (extra.realtimeNav !== undefined) {
+    const rtChange = extra.realtimeChange !== undefined ? Number(extra.realtimeChange) : null;
+    html = `
+      <div class="detail-section" id="realtimeSection">
+        <div class="section-title"><span class="num">④</span> 实时估值
+          <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:4px">
+            ${extra.guzhiTime ? esc(extra.guzitiTime || extra.guzhiTime) : ''}
+          </span>
+        </div>
+        <table class="metrics-table">
+          <tr><td>单位净值（${esc(extra.realtimeDate || m.nav_date || '--')}）</td>
+            <td>${fmt(extra.realtimeNav, '')}</td></tr>
+          <tr><td>估算涨跌幅</td>
+            <td class="${rtChange >= 0 ? 'val-pos' : 'val-neg'}">${rtChange != null ? fmt(rtChange) : '--'}</td></tr>
+          ${extra.realtimeLjjz ? `<tr><td>累计净值</td><td>${fmt(extra.realtimeLjjz, '')}</td></tr>` : ''}
+        </table>
+      </div>` + html;
+
+    // 更新后续编号
+    html = html.replace(/<span class="num">④<\/span>/g, '<span class="num">④</span>')
+               .replace(/<span class="num">⑤<\/span>/g, '<span class="num">⑤</span>')
+               .replace(/<span class="num">⑥<\/span>/g, '<span class="num">⑥</span>')
+               .replace(/<span class="num">⑦<\/span>/g, '<span class="num">⑦</span>')
+               .replace(/<span class="num">⑧<\/span>/g, '<span class="num">⑧</span>')
+               .replace(/<span class="num">⑨<\/span>/g, '<span class="num">⑨</span>');
+  }
+
+  if (html) container.innerHTML = html;
+  else container.innerHTML = '';
+}
+
 /* ---- 主渲染 ---- */
+let currentMetrics = {};
 function renderDetail(data) {
   const wrap = $('#detailContent');
   const navTitle = $('#navTitle');
@@ -57,6 +229,7 @@ function renderDetail(data) {
 
   const f = data.fund;
   const m = data.metrics || {};
+  currentMetrics = m;
   const r = (data.reason && data.reason.structured) ? data.reason.structured : null;
   const raw = data.reason ? data.reason.raw : '';
 
@@ -122,6 +295,9 @@ function renderDetail(data) {
       <div class="chart-wrap">${buildChart(m)}</div>
     </div>
 
+    <!-- 补充详情占位（异步加载后填充） -->
+    <div id="extraInfo"></div>
+
     <!-- 分析文案 -->
     <div class="detail-section">
       <div class="section-title"><span class="num">③</span> AI 深度分析</div>
@@ -148,10 +324,19 @@ function renderDetail(data) {
   if (backBtnBottom) backBtnBottom.onclick = goBack;
   const redrawBtn = $('#redrawBtn');
   if (redrawBtn) redrawBtn.onclick = () => { window.history.back(); };
+
+  // 异步拉取补充详情
+  if (f.code) {
+    fetch(`api/fund-detail/${f.code}`)
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.ok && resp.data) renderExtraInfo(resp.data);
+      })
+      .catch(err => console.warn('fund-detail fetch failed:', err));
+  }
 }
 
 function goBack() {
-  // 优先回到首页（处理从历史记录进入的情况）
   if (window.history.length > 1) {
     window.history.back();
   } else {
@@ -165,7 +350,6 @@ function goBack() {
     const raw = sessionStorage.getItem('fundDetailData');
     const data = raw ? JSON.parse(raw) : null;
     renderDetail(data);
-    // 用完即清（节省空间）
     sessionStorage.removeItem('fundDetailData');
   } catch (e) {
     console.error('detail init error:', e);

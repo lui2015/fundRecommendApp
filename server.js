@@ -4,6 +4,7 @@ const express = require('express');
 const config = require('./src/config');
 const db = require('./src/db');
 const { draw } = require('./src/draw');
+const { getFundDetail } = require('./src/fund-detail');
 const { generateReport } = require('./src/report');
 const { CATEGORIES, COMMON_FIELDS, CONSTRAINT_FIELDS, listStrategies } = require('./src/strategies');
 const { recommendByStrategy } = require('./src/strategyRecommend');
@@ -124,6 +125,17 @@ app.post('/api/save', rateLimit, (req, res) => {
   } catch (e) {
     console.error('save error:', e);
     res.status(500).json({ error: '保存失败：' + (e.message || e) });
+  }
+});
+
+// ---- 基金详情补充数据（规模/经理/持仓） ----
+app.get('/api/fund-detail/:code', async (req, res) => {
+  try {
+    const data = await getFundDetail(req.params.code);
+    res.json({ ok: true, data });
+  } catch (e) {
+    console.error('fund-detail error:', e.message);
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
