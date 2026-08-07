@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>求一基 · 趣味抽签基金推荐</title>
-  <link rel="stylesheet" href="style.css?v=2026080712" />
+  <link rel="stylesheet" href="style.css?v=2026080713" />
 </head>
 <body>
   <!-- 科幻背景层 -->
@@ -136,22 +136,19 @@
       <button class="drawer-close" id="drawerClose" aria-label="关闭">&times;</button>
     </div>
     <nav class="drawer-nav">
-      <a class="drawer-item active" id="menuHistory" href="#">
-        <span class="drawer-icon">&#128220;</span> 抽签记录
-      </a>
-      <a class="drawer-item" id="menuStrategy" href="#">
+      <a class="drawer-item active" id="menuStrategy" href="#">
         <span class="drawer-icon">&#128218;</span> 选基攻略
         <span class="drawer-badge">NEW</span>
       </a>
     </nav>
-    <!-- 抽签记录内容区 -->
-    <section class="drawer-section" id="drawerHistorySection">
-      <div class="history-head">
+    <!-- 抽签记录（默认收起） -->
+    <details class="drawer-section" id="drawerHistorySection">
+      <summary class="history-head">
         <span>&#128220; 抽签记录</span>
-        <button class="refresh-btn" id="refreshHistory">&#8635;</button>
-      </div>
+        <button class="refresh-btn" id="refreshHistory" onclick="event.stopPropagation()">&#8635;</button>
+      </summary>
       <ul id="historyList" class="history-list"></ul>
-    </section>
+    </details>
   </aside>
 
   <!-- 选基攻略弹框-->
@@ -207,7 +204,7 @@
   <!-- 烟花绽放层 -->
   <canvas id="fireworks" class="fireworks-canvas"></canvas>
 
-  <script src="app.js?v=2026080712"></script>
-  <script src="strategy.js?v=2026080712"></script>
+  <script src="app.js?v=2026080713"></script>
+  <script src="strategy.js?v=2026080713"></script>
 </body>
 </html>

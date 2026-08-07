@@ -476,8 +476,6 @@ function openDrawer() {
   drawer.classList.add('open');
   drawerOverlay.classList.add('show');
   document.body.style.overflow = 'hidden';
-  // 打开时加载历史
-  loadHistory();
 }
 function closeDrawer() {
   drawer.classList.remove('open');
@@ -487,6 +485,14 @@ function closeDrawer() {
 $('#menuBtn').addEventListener('click', openDrawer);
 $('#drawerClose').addEventListener('click', closeDrawer);
 drawerOverlay.addEventListener('click', closeDrawer);
+
+// 抽签记录懒加载：展开时才请求
+const historySection = $('#drawerHistorySection');
+if (historySection) {
+  historySection.addEventListener('toggle', () => {
+    if (historySection.open) loadHistory();
+  });
+}
 // ESC 关闭（优先弹框 > 抽屉）
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
@@ -660,4 +666,3 @@ window.addEventListener('resize', () => { if (fwCtx) resizeFw(); });
 
 // ---- 初始化 ----
 initParticles();
-loadHistory();

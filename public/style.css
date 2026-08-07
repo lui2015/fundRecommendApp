@@ -766,9 +766,26 @@ html, body {
 .drawer-item:hover, .drawer-item.active { background: rgba(230,57,70,.1); color: var(--red); }
 .drawer-icon { font-size: 17px; }
 
-.drawer-section { flex: 1; overflow-y: auto; padding: 14px 16px; }
-.drawer-section .history-head { margin-bottom: 10px; }
-.history-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; color: var(--text2); margin-bottom: 10px; }
+.drawer-section {
+  margin: 0 12px 10px; border: 1px solid var(--border); border-radius: 12px;
+  background: rgba(255,255,255,.02); overflow: hidden;
+}
+.drawer-section[open] { border-color: rgba(230,57,70,.28); background: rgba(230,57,70,.03); }
+.drawer-section .history-head,
+.drawer-section > summary.history-head {
+  cursor: pointer; user-select: none; list-style: none;
+  padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;
+  font-size: 14px; font-weight: 700; color: var(--text2);
+  transition: color .2s;
+}
+.drawer-section .history-head::-webkit-details-marker,
+.drawer-section > summary.history-head::-webkit-details-marker { display: none; }
+.drawer-section > summary.history-head::after {
+  content: '▸'; font-size: 12px; color: var(--text3); transition: transform .25s;
+}
+.drawer-section[open] > summary.history-head { color: var(--red); }
+.drawer-section[open] > summary.history-head::after { transform: rotate(90deg); color: var(--red); }
+.drawer-section .history-list { padding: 0 14px 12px; }
 .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text3); font-size: 15px; width: 32px; height: 32px; cursor: pointer; transition: all .2s; }
 .refresh-btn:hover { border-color: var(--red); color: var(--red); transform: rotate(180deg); }
 .history-list { list-style: none; }
