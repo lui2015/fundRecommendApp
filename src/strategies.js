@@ -43,6 +43,71 @@ const COMMON_FIELDS = [
   },
 ];
 
+/* ------------------------------------------------------------
+   自定义条件限制
+   hard=true 的字段会对候选池做真实硬过滤（而非仅写入提示词）
+   ------------------------------------------------------------ */
+const CONSTRAINT_FIELDS = [
+  {
+    key: 'fundTypes', label: '限定基金类型', type: 'multi', hard: true,
+    options: ['混合型', '股票型', '指数型', '债券型'],
+    hint: '不选则按该策略的默认类型',
+  },
+  {
+    key: 'maxFee', label: '费率上限', type: 'number', hard: true,
+    min: 0, max: 3, step: 0.1, unit: '%', placeholder: '如 1.2',
+    hint: '只保留当前费率不高于此值的基金',
+  },
+  {
+    key: 'minYears', label: '成立年限下限', type: 'number', hard: true,
+    min: 0, max: 25, step: 1, unit: '年', placeholder: '如 5',
+    hint: '过滤掉成立时间过短、样本不足的产品',
+  },
+  {
+    key: 'minR3y', label: '近3年收益下限', type: 'number', hard: true,
+    min: -50, max: 300, step: 1, unit: '%', placeholder: '如 20',
+    hint: '低于该收益的候选直接剔除',
+  },
+  {
+    key: 'maxR3y', label: '近3年收益上限', type: 'number', hard: true,
+    min: -50, max: 500, step: 1, unit: '%', placeholder: '如 120',
+    hint: '想避开涨幅过大、可能已在高位的品种时使用',
+  },
+  {
+    key: 'excludeNegative', label: '排除近1年为负', type: 'select', hard: true,
+    options: ['是，剔除近1年亏损', '否，允许近期哑火'],
+    hint: '逆向左侧布局类策略建议选「否」',
+  },
+  {
+    key: 'excludeKeywords', label: '排除含关键词的基金', type: 'tags', hard: true,
+    maxLength: 60, maxItems: 6, placeholder: '白酒, 军工, QDII（逗号分隔）',
+    hint: '基金名称命中任一关键词即被剔除',
+  },
+  {
+    key: 'includeKeywords', label: '只要含关键词的基金', type: 'tags', hard: true,
+    maxLength: 60, maxItems: 6, placeholder: '沪深300, 红利（逗号分隔）',
+    hint: '留空表示不限制；填写后仅保留命中的基金',
+  },
+  {
+    key: 'excludeCodes', label: '排除已持有代码', type: 'tags', hard: true,
+    maxLength: 80, maxItems: 10, pattern: 'code', placeholder: '161631, 630009（6位数字，逗号分隔）',
+    hint: '避免推荐你已经买过的基金',
+  },
+  {
+    key: 'pickCount', label: '希望给出几只标的', type: 'select',
+    options: ['1 只', '2 只', '3 只', '4 只', '不限，由 AI 决定'],
+  },
+  {
+    key: 'shareClass', label: '份额类型偏好', type: 'select',
+    options: ['A 类（长期持有）', 'C 类（灵活进出）', '不限'],
+  },
+  {
+    key: 'hardRules', label: '其他硬性要求', type: 'text', maxLength: 300,
+    placeholder: '如：不要单一行业主题、不要规模低于 5 亿的、必须支持定投、避开我已重仓的科技方向…',
+    hint: 'AI 会把这里的要求当作必须遵守的前置条件',
+  },
+];
+
 const STRATEGIES = [
   /* ---------------- 一、基金优选 ---------------- */
   {
@@ -501,4 +566,4 @@ function getStrategy(id) {
   return STRATEGY_MAP.get(String(id || '')) || null;
 }
 
-module.exports = { CATEGORIES, COMMON_FIELDS, STRATEGIES, listStrategies, getStrategy };
+module.exports = { CATEGORIES, COMMON_FIELDS, CONSTRAINT_FIELDS, STRATEGIES, listStrategies, getStrategy };

@@ -5,7 +5,7 @@ const config = require('./src/config');
 const db = require('./src/db');
 const { draw } = require('./src/draw');
 const { generateReport } = require('./src/report');
-const { CATEGORIES, COMMON_FIELDS, listStrategies } = require('./src/strategies');
+const { CATEGORIES, COMMON_FIELDS, CONSTRAINT_FIELDS, listStrategies } = require('./src/strategies');
 const { recommendByStrategy } = require('./src/strategyRecommend');
 
 const app = express();
@@ -54,15 +54,16 @@ app.get('/api/strategies', (req, res) => {
   res.json({
     categories: CATEGORIES,
     commonFields: COMMON_FIELDS,
+    constraintFields: CONSTRAINT_FIELDS,
     strategies: listStrategies(),
   });
 });
 
-// 选基攻略：按选定策略 + 补充信息生成推荐方案
+// 选基攻略：按选定策略 + 补充信息 + 自定义限制生成推荐方案
 app.post('/api/strategy/recommend', rateLimit, async (req, res) => {
   try {
-    const { strategyId, common, extra, sort } = req.body || {};
-    const result = await recommendByStrategy({ strategyId, common, extra, sort });
+    const { strategyId, common, extra, constraints, sort } = req.body || {};
+    const result = await recommendByStrategy({ strategyId, common, extra, constraints, sort });
     res.json(result);
   } catch (e) {
     const status = e.status || 500;

@@ -36,6 +36,7 @@
     loaded: false,
     categories: [],
     commonFields: [],
+    constraintFields: [],
     strategies: [],
     activeCat: 'all',
     current: null,
@@ -84,6 +85,7 @@
       if (!resp.ok) throw new Error(data.error || '加载失败');
       st.categories = data.categories || [];
       st.commonFields = data.commonFields || [];
+      st.constraintFields = data.constraintFields || [];
       st.strategies = data.strategies || [];
       st.loaded = true;
       renderTabs();
@@ -161,20 +163,63 @@
   /* ---------- 信息补充表单 ---------- */
   function fieldHtml(f, group) {
     const name = group + ':' + f.key;
+    const hint = f.hint ? `<span class="stg-field-hint">${esc(f.hint)}</span>` : '';
+
     if (f.type === 'select') {
       return `<label class="stg-field">
         <span class="stg-field-label">${esc(f.label)}</span>
         <select class="cyber-select" name="${esc(name)}">
-          <option value="">不限/ 由 AI 建议</option>
+          <option value="">不限 / 由 AI 建议</option>
           ${(f.options || []).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join('')}
         </select>
+        ${hint}
       </label>`;
     }
+
+    if (f.type === 'multi') {
+      return `<div class="stg-field stg-field-wide">
+        <span class="stg-field-label">${esc(f.label)}</span>
+        <div class="stg-multi" data-name="${esc(name)}">
+          ${(f.options || []).map((o) => `<button type="button" class="stg-opt" data-val="${esc(o)}">${esc(o)}</button>`).join('')}
+        </div>
+        ${hint}
+      </div>`;
+    }
+
+    if (f.type === 'number') {
+      return `<label class="stg-field">
+        <span class="stg-field-label">${esc(f.label)}</span>
+        <span class="stg-num-wrap">
+          <input class="cyber-input" type="number" name="${esc(name)}"
+            min="${f.min != null ? f.min : ''}" max="${f.max != null ? f.max : ''}"
+            step="${f.step != null ? f.step : 'any'}" placeholder="${esc(f.placeholder || '')}" inputmode="decimal" />
+          ${f.unit ? `<i class="stg-num-unit">${esc(f.unit)}</i>` : ''}
+        </span>
+        ${hint}
+      </label>`;
+    }
+
+    if (f.type === 'tags') {
+      return `<label class="stg-field stg-field-wide">
+        <span class="stg-field-label">${esc(f.label)}</span>
+        <input class="cyber-input" type="text" name="${esc(name)}"
+          maxlength="${f.maxLength || 80}" placeholder="${esc(f.placeholder || '')}" />
+        ${hint}
+      </label>`;
+    }
+
     return `<label class="stg-field stg-field-wide">
       <span class="stg-field-label">${esc(f.label)}</span>
       <textarea class="cyber-input" name="${esc(name)}" rows="2" maxlength="${f.maxLength || 200}"
         placeholder="${esc(f.placeholder || '')}"></textarea>
+      ${hint}
     </label>`;
+  }
+
+  function bindMultiGroups() {
+    stgForm.querySelectorAll('.stg-multi .stg-opt').forEach((b) => {
+      b.addEventListener('click', () => b.classList.toggle('on'));
+    });
   }
 
   function gotoForm(id) {
@@ -192,20 +237,48 @@
       <div class="stg-form-group">
         <div class="stg-group-title">你的情况（可选，填得越细方案越贴合）</div>
         <div class="stg-grid">${st.commonFields.map((f) => fieldHtml(f, 'common')).join('')}</div>
-      </div>`;
+      </div>
+      <details class="stg-form-group stg-advanced">
+        <summary class="stg-group-title stg-summary">
+          自定义条件限制<span class="stg-summary-tag">进阶 ·硬性过滤</span>
+        </summary>
+        <div class="stg-advanced-desc">带「已对候选池强制过滤」说明的条件会真实剔除不合规基金；若条件过严导致无候选，系统会自动放宽并在结果中告知你。</div>
+        <div class="stg-grid">${st.constraintFields.map((f) => fieldHtml(f, 'cons')).join('')}</div>
+        <button type="button" class="stg-reset-btn" id="stgResetCons">&#8635; 清空自定义限制</button>
+      </details>`;
+    bindMultiGroups();
+    const reset = q('#stgResetCons');
+    if (reset) reset.addEventListener('click', (e) => {
+      e.preventDefault();
+      stgForm.querySelectorAll('[name^="cons:"]').forEach((el) => { el.value = ''; });
+      stgForm.querySelectorAll('.stg-multi .stg-opt.on').forEach((b) => b.classList.remove('on'));
+      tip('已清空自定义限制');
+    });
     showStep('form');
   }
 
   function collectForm() {
-    const common = {}; const extra = {};
+    const common = {}; const extra = {}; const constraints = {};
+    const bucket = { common, extra, cons: constraints };
+
     stgForm.querySelectorAll('[name]').forEach((el) => {
       const [group, key] = el.name.split(':');
+      const target = bucket[group];
+      if (!target) return;
       const v = (el.value || '').trim();
       if (!v) return;
-      if (group === 'common') common[key] = v;
-      else extra[key] = v;
+      target[key] = v;
     });
-    return { common, extra };
+
+    stgForm.querySelectorAll('.stg-multi').forEach((box) => {
+      const [group, key] = (box.dataset.name || '').split(':');
+      const target = bucket[group];
+      if (!target) return;
+      const vals = Array.from(box.querySelectorAll('.stg-opt.on')).map((b) => b.dataset.val);
+      if (vals.length) target[key] = vals;
+    });
+
+    return { common, extra, constraints };
   }
 
   /* ---------- 提交生成 ---------- */
@@ -221,7 +294,7 @@
   async function submitStrategy() {
     if (st.busy || !st.current) return;
     st.busy = true;
-    const { common, extra } = collectForm();
+    const { common, extra, constraints } = collectForm();
     showStep('loading');
     stgTitle.textContent = st.current.name;
     stgSub.textContent = '正在生成方案…';
@@ -249,7 +322,7 @@
       const resp = await fetch('api/strategy/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ strategyId: st.current.id, common, extra }),
+        body: JSON.stringify({ strategyId: st.current.id, common, extra, constraints }),
         signal: ctrl.signal,
       });
       const data = await resp.json();
@@ -283,6 +356,25 @@
     if (data.fallback) notes.push('<span class="tag tag-warn">AI 服务异常，已降级为策略骨架方案</span>');
     if (data.droppedPicks) notes.push(`<span class="tag tag-warn">已剔除 ${data.droppedPicks} 个不在候选池中的标的</span>`);
 
+    const cr = data.constraintResult || {};
+    let consHtml = '';
+    if ((cr.applied && cr.applied.length) || (cr.relaxed && cr.relaxed.length)) {
+      consHtml = `
+        <div class="stg-cons-box">
+          <div class="stg-cons-title">&#128295; 你的自定义限制</div>
+          ${(cr.applied || []).length ? `<div class="stg-cons-row">
+            <span class="stg-cons-k stg-cons-ok">已生效</span>
+            <span class="stg-cons-v">${cr.applied.map((x) => `<i>${esc(x)}</i>`).join('')}</span>
+          </div>` : ''}
+          ${(cr.relaxed || []).length ? `<div class="stg-cons-row">
+            <span class="stg-cons-k stg-cons-relax">已放宽</span>
+            <span class="stg-cons-v">${cr.relaxed.map((x) => `<i class="relax">${esc(x)}</i>`).join('')}
+              <em>条件过严会导致无可选标的，已自动放宽这些条件</em></span>
+          </div>` : ''}
+          <div class="stg-cons-stat">候选池：${cr.poolBefore || 0} 只 → 过滤后 ${cr.poolAfter || 0} 只（剔除 ${cr.removed || 0} 只）</div>
+        </div>`;
+    }
+
     const picksHtml = (p.picks || []).length
       ? p.picks.map((k) => `
         <div class="stg-pick">
@@ -308,6 +400,8 @@
       ${notes.length ? `<div class="res-tags">${notes.join('')}</div>` : ''}
       ${p.opening ? `<div class="res-opening">${esc(p.opening)}</div>` : ''}
       ${p.strategyEcho ? `<div class="res-oneliner">${esc(p.strategyEcho)}</div>` : ''}
+      ${consHtml}
+      ${p.constraintNote ? `<div class="stg-cons-note">&#128221; ${esc(p.constraintNote)}</div>` : ''}
 
       <div class="stg-rsec"><h3>&#127919; 建议标的与权重</h3>${picksHtml}</div>
 
