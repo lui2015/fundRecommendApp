@@ -28,7 +28,7 @@ function renderFavBtn(code) {
   const btn = $('#favBtn');
   if (!btn) return;
   const active = isFav(code);
-  btn.textContent = active ? '&#9733;' : '&#9734;';
+  btn.textContent = active ? '★' : '☆';
   btn.classList.toggle('on', active);
   btn.title = active ? '取消自选' : '加入自选';
 }
