@@ -1,6 +1,6 @@
 /* ============================================
-   求一基 · 前端交互逻辑
-   老虎机数字滚动 + 筛选 + 结果渲染 + 保存/历史
+   求一鸡 · 前端交互逻辑（养鸡场版）
+   开笼抓鸡 + 养殖偏好 + 结果渲染 + 收进鸡栏
    ============================================ */
 
 const state = {
@@ -16,11 +16,11 @@ function isFav(code) { return getFavs().some(f => f.code === code); }
 function toggleFav(fund, metrics) {
   const favs = getFavs();
   const idx = favs.findIndex(f => f.code === fund.code);
-  if (idx >= 0) { favs.splice(idx, 1); showToast('已取消自选'); }
+  if (idx >= 0) { favs.splice(idx, 1); showToast('已放归野外'); }
   else {
     if (favs.length >= 20) { showToast('自选最多 20 只，请先移除一些'); return false; }
     favs.unshift({ code: fund.code, name: fund.name, type: fund.type, fee: (metrics || {}).fee, r3y: (metrics || {}).r3y, years: (metrics || {}).years, addedAt: Date.now() });
-    showToast('已加入自选 &#9733;');
+    showToast('已住进鸡窝 &#9733;');
   }
   saveFavs(favs); renderFavBtn(fund.code); renderFavList(); return true;
 }
@@ -30,7 +30,7 @@ function renderFavBtn(code) {
   const active = isFav(code);
   btn.textContent = active ? '★' : '☆';
   btn.classList.toggle('on', active);
-  btn.title = active ? '取消自选' : '加入自选';
+  btn.title = active ? '放归野外' : '放进鸡窝';
 }
 function renderFavList() {
   const list = $('#favList');
@@ -38,7 +38,7 @@ function renderFavList() {
   if (!list) return;
   const favs = getFavs();
   if (countEl) countEl.textContent = favs.length;
-  if (!favs.length) { list.innerHTML = '<li class="empty-state">还没有自选，抽签后点 &#9734; 收藏</li>'; return; }
+  if (!favs.length) { list.innerHTML = '<li class="empty-state">鸡窝还空着，抓到的鸡点 &#9734; 就能住进来</li>'; return; }
   list.innerHTML = favs.map((f) => `
     <li class="fav-item">
       <div class="fav-info">
@@ -54,7 +54,7 @@ function renderFavList() {
       saveFavs(favs);
       renderFavBtn(code);
       renderFavList();
-      showToast('已移除自选');
+      showToast('已放归野外');
     });
   });
 }
@@ -78,6 +78,7 @@ const summaryCode = $('#summaryCode');
 const summaryTags = $('#summaryTags');
 const summaryMetrics = $('#summaryMetrics');
 const summaryOneliner = $('#summaryOneliner');
+const summaryChicken = $('#summaryChicken');
 const historyList = $('#historyList');
 const toastEl = $('#toast');
 const favBtn = $('#favBtn');
@@ -86,6 +87,7 @@ const drawer = $('#drawer');
 const drawerOverlay = $('#drawerOverlay');
 const slogan = document.querySelector('.slogan');
 const particlesEl = $('#particles');
+const chickenEl = $('#chicken');
 
 // ---- Toast ----
 function showToast(msg) {
@@ -114,11 +116,11 @@ function resetDigits() {
 
 function startSpin() {
   resetDigits();
-  // 显示等待摇奖（科幻加载态）
+  // 显示抓鸡中（鸡舍开门态）
   wishText.classList.add('hidden');
   slotStatus.classList.remove('hidden');
   wishPanel.classList.add('loading');
-  statusMsg.textContent = '等待摇奖…';
+  statusMsg.textContent = '鸡舍开门中…';
   spawnLoadingParticles();
 
   // 触发 LED 跑马灯动效
@@ -210,7 +212,7 @@ function resetUI() {
   wishPanel.classList.remove('loading');
   clearLoadingParticles();
   wishText.classList.remove('hidden');
-  wishText.innerHTML = '<span class="char">等</span><span class="char">待</span><span class="char">摇</span><span class="char">奖</span>';
+  wishText.innerHTML = '<span class="char">等</span><span class="char">待</span><span class="char">开</span><span class="char">笼</span>';
   resultSummary.classList.add('hidden');
   wishPanel.classList.remove('has-result');
   wishPanel.onclick = null;
@@ -219,7 +221,19 @@ function resetUI() {
   state.isDrawing = false;
   drawBtn.disabled = false;
   saveBtn.disabled = true;
+  if (chickenEl) chickenEl.textContent = '🐔';
+  if (summaryChicken) summaryChicken.textContent = '🐔';
 }
+// ---- 游戏化：按近3年收益给这只鸡评稀有度 ----
+function getChickenRarity(r3y) {
+  const v = Number(r3y);
+  if (!Number.isFinite(v)) return { key: 'n', label: '土鸡 · N', emoji: '🐣' };
+  if (v >= 80) return { key: 'ssr', label: '金鸡 · SSR', emoji: '🐔' };
+  if (v >= 30) return { key: 'sr', label: '银鸡 · SR', emoji: '🐓' };
+  if (v >= 5) return { key: 'r', label: '铜鸡 · R', emoji: '🐤' };
+  return { key: 'n', label: '土鸡 · N', emoji: '🐣' };
+}
+
 function fmt(v, s = '%') {
   return (v === null || v === undefined) ? '--' : `${v}${s}`;
 }
@@ -242,7 +256,7 @@ async function doDraw() {
   // 重置提炼卡片
   resultSummary.classList.add('hidden');
   wishText.classList.remove('hidden');
-  wishText.innerHTML = '<span class="char">等</span><span class="char">待</span><span class="char">摇</span><span class="char">奖</span>';
+  wishText.innerHTML = '<span class="char">等</span><span class="char">待</span><span class="char">开</span><span class="char">笼</span>';
   wishPanel.classList.remove('has-result');
   wishPanel.onclick = null;
 
@@ -259,16 +273,16 @@ async function doDraw() {
     // 请求中：显示已等待时间
     let elapsed = 0;
     const statusEl = $('#statusMsg');
-    if (statusEl) statusEl.textContent = 'AI 正在筛选基金…';
+    if (statusEl) statusEl.textContent = '鸡舍里正在挑鸡…';
     drawTimer = setInterval(() => {
       elapsed++;
       if (!statusEl) return;
       if (elapsed <= 5) {
-        statusEl.textContent = 'AI 正在筛选基金' + '.'.repeat(elapsed % 4);
+        statusEl.textContent = '鸡舍里正在挑鸡' + '.'.repeat(elapsed % 4);
       } else if (elapsed <= 20) {
-        statusEl.textContent = 'AI 生成推荐文案中 (' + elapsed + 's)';
+        statusEl.textContent = '正在给这只鸡写体检报告 (' + elapsed + 's)';
       } else {
-        statusEl.textContent = '仍在处理中，请稍候 (' + elapsed + 's)';
+        statusEl.textContent = '鸡还在笼里跑，再等等 (' + elapsed + 's)';
       }
     }, 1000);
 
@@ -310,8 +324,8 @@ async function doDraw() {
     clearTimeout(timer);
     resetUI();
     const msg = e.name === 'AbortError'
-      ? '请求超时（>60s），后端 AI 处理时间过长，请稍后重试'
-      : ('抽签失败：' + e.message);
+      ? '鸡跑太久没抓到（>60s），请再开一次笼试试'
+      : ('抓鸡失败：' + e.message);
     showToast(msg);
   }
 }
@@ -335,7 +349,7 @@ function renderResult(data) {
   if (r) {
     reasonHtml = `
       <div class="reason-block"><h3>为什么是它</h3><ul>${listHtml(r.whyThis)}</ul></div>
-      <div class="reason-block"><h3>为什么不是收益榜首</h3><ul>${listHtml(r.notOthers, '盲盒在初筛池中随机会摇出，并非单纯押注收益榜首。')}</ul></div>
+      <div class="reason-block"><h3>为什么不是收益榜首</h3><ul>${listHtml(r.notOthers, '这只鸡是从鸡舍里随机抓的，并非单纯押注收益榜首。')}</ul></div>
       <div class="reason-block"><h3>这只基金的短板</h3><ul>${listHtml(r.shortBoard, '任何基金均有波动风险，历史业绩不代表未来。')}</ul></div>
       <div class="reason-block">
         <h3>适合谁 / 不适合谁</h3>
@@ -355,8 +369,14 @@ function renderResult(data) {
   const oneLiner = r ? (r.oneLiner || '') : (raw ? raw : '');
   summaryFundName.textContent = f.name || '未知基金';
   summaryCode.textContent = f.code || '';
-  // 标签：类型 + 数据源
+  // ---- 游戏化：根据近3年收益评一只鸡的稀有度 ----
+  const rarity = getChickenRarity(m.r3y);
+  if (summaryChicken) summaryChicken.textContent = rarity.emoji;
+  if (chickenEl) chickenEl.textContent = rarity.emoji;
+
+  // 标签：稀有度 + 类型 + 数据源
   const tagHtml = [
+    `<span class="summary-tag summary-tag-rarity ${rarity.key}">${rarity.label}</span>`,
     `<span class="summary-tag summary-tag-type">${escapeHtml(f.type || '--')}</span>`,
     data.isMock
       ? `<span class="summary-tag summary-tag-mock">示例数据</span>`
@@ -400,7 +420,7 @@ function renderResult(data) {
   const detailHtml = `
     <div class="res-header">
       <div class="res-tags">
-        <span class="tag tag-blind">盲盒抽取</span>
+        <span class="tag tag-blind">随机抓鸡</span>
         <span class="tag tag-type">${escapeHtml(f.type || '')}</span>
         ${defaultsNote}${mockNote}
       </div>
@@ -418,8 +438,8 @@ function renderResult(data) {
     </table>
     ${reasonHtml}
     <div class="res-actions">
-      <button class="res-btn res-btn-ghost" id="againBtn">&#8635; 再求一次</button>
-      <button class="res-btn res-btn-primary" id="detailBtn">&#128270; 查看详情报告</button>
+      <button class="res-btn res-btn-ghost" id="againBtn">&#8635; 再抓一只</button>
+      <button class="res-btn res-btn-primary" id="detailBtn">&#128270; 鸡的体检报告</button>
     </div>`;
 
   modalBody.innerHTML = detailHtml;
@@ -461,7 +481,7 @@ async function saveResult(data, thenOpen) {
     const out = await resp.json();
     if (!resp.ok) throw new Error(out.error || '保存失败');
     data._savedId = out.id;
-    showToast('已收入盲盒记录 #' + out.id);
+    showToast('已收进鸡栏 #' + out.id);
     saveBtn.disabled = true;
     if (thenOpen) window.open('api/reports/' + out.id, '_blank');
     loadHistory();
@@ -476,7 +496,7 @@ async function loadHistory() {
     const resp = await fetch('api/history?limit=20');
     const data = await resp.json();
     if (!data.rows.length) {
-      historyList.innerHTML = '<li class="empty-state">还没有抽签记录，快去求一基吧～</li>';
+      historyList.innerHTML = '<li class="empty-state">还没有抓鸡记录，快去开笼吧～</li>';
       return;
     }
     historyList.innerHTML = data.rows.map((r) => `
@@ -524,7 +544,7 @@ async function loadHistory() {
 }
 
 async function delHistory(id) {
-  if (!confirm('确定删除该抽签记录？')) return;
+  if (!confirm('确定把这只鸡从记录里删掉？')) return;
   try {
     const resp = await fetch('api/history/' + id, { method: 'DELETE' });
     if (resp.ok) { showToast('已删除'); loadHistory(); }
@@ -612,7 +632,7 @@ function spawnLoadingParticles() {
   if (!loadingParticlesEl) return;
   clearLoadingParticles();
   const frag = document.createDocumentFragment();
-  const colors = ['#e63946', '#f0c14b', '#4dabf7', '#fff'];
+  const colors = ['#f6b73c', '#f2703c', '#8ed081', '#fff8e6'];
   for (let i = 0; i < 12; i++) {
     const p = document.createElement('div');
     p.className = 'loading-particle';
@@ -634,7 +654,7 @@ function clearLoadingParticles() {
 function initParticles() {
   if (!particlesEl) return;
   const N = 26;
-  const colors = ['rgba(240,193,75,', 'rgba(230,57,70,', 'rgba(255,255,255,'];
+  const colors = ['rgba(246,183,60,', 'rgba(242,112,60,', 'rgba(255,255,255,'];
   const frag = document.createDocumentFragment();
   for (let i = 0; i < N; i++) {
     const p = document.createElement('div');
@@ -656,7 +676,7 @@ function initParticles() {
 // ---- 烟花绽放效果（发光版 · 不卡顿）----
 const fwCanvas = document.getElementById('fireworks');
 let fwCtx = null, fwRaf = null, fwParticles = [], fwFlashes = [], fwRunning = false;
-const FW_COLORS = ['#e63946', '#f0c14b', '#2ecc71', '#4dabf7', '#ff7eb6', '#ffffff'];
+const FW_COLORS = ['#f6b73c', '#f2703c', '#8ed081', '#ffd28a', '#3fa96b', '#ffffff'];
 
 function hexA(hex, a) {
   const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);

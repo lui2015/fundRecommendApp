@@ -1,9 +1,19 @@
 /* ============================================
-   求一基 · 详情页渲染（整合弹窗分析 + 报告图表 + 补充数据）
+   求一鸡 · 鸡的体检报告（分析 + 图表 + 补充数据）
    数据来源：sessionStorage('fundDetailData') + /api/fund-detail/:code
    ============================================ */
 
 const $ = (sel) => document.querySelector(sel);
+
+/* ---- 游戏化：按近3年收益给这只鸡评稀有度 ---- */
+function getChickenRarity(r3y) {
+  const v = Number(r3y);
+  if (!Number.isFinite(v)) return { key: 'n', label: '土鸡 · N', emoji: '🐣' };
+  if (v >= 80) return { key: 'ssr', label: '金鸡 · SSR', emoji: '🐔' };
+  if (v >= 30) return { key: 'sr', label: '银鸡 · SR', emoji: '🐓' };
+  if (v >= 5) return { key: 'r', label: '铜鸡 · R', emoji: '🐤' };
+  return { key: 'n', label: '土鸡 · N', emoji: '🐣' };
+}
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -35,13 +45,13 @@ function buildChart(metrics) {
   rows.forEach(([label, v], i) => {
     const y = 6 + i * (barH + gap);
     const len = (Math.abs(v) / max) * ((w - labelW) / 2 - 14);
-    const color = v >= 0 ? '#e63946' : '#2ecc71';
+    const color = v >= 0 ? '#f2703c' : '#3fa96b';
     const x = v >= 0 ? zeroX - len : zeroX;
-    bars += `<text x="0" y="${y + barH / 2 + 4}" font-size="12" fill="#9999aa">${label}</text>`;
+    bars += `<text x="0" y="${y + barH / 2 + 4}" font-size="12" fill="#a2937c">${label}</text>`;
     bars += `<rect x="${x}" y="${y}" width="${Math.max(len, 2)}" height="${barH}" rx="4" fill="${color}" opacity=".88"/>`;
     bars += `<text x="${v >= 0 ? x - 6 : x + len + 6}" y="${y + barH / 2 + 4}" font-size="12" fill="${color}" text-anchor="${v >= 0 ? 'end' : 'start'}">${v}%</text>`;
   });
-  bars += `<line x1="${zeroX}" y1="2" x2="${zeroX}" y2="${h - 4}" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>`;
+  bars += `<line x1="${zeroX}" y1="2" x2="${zeroX}" y2="${h - 4}" stroke="#e6d7b8" stroke-width="1" stroke-dasharray="3,3"/>`;
   return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="业绩走势" style="max-height:${h}px">${bars}</svg>`;
 }
 
@@ -173,7 +183,7 @@ function renderExtraInfo(extra) {
         <div class="asset-row">
           <span class="asset-label">${dateStr}</span>
           <div class="asset-bar-wrap">
-            <div class="asset-bar" style="width:${barW}%;background:linear-gradient(90deg,#e63946,#c0392b)"></div>
+            <div class="asset-bar" style="width:${barW}%;background:linear-gradient(90deg,#ffab3d,#f2703c)"></div>
           </div>
           <span class="asset-pct">${p.percent != null ? p.percent + '%' : '--'}</span>
         </div>`;
@@ -232,7 +242,7 @@ function renderDetail(data) {
   const wrap = $('#detailContent');
   const navTitle = $('#navTitle');
   if (!data || !data.fund) {
-    wrap.innerHTML = '<div class="no-data">数据丢失，请返回重新抽签</div>';
+    wrap.innerHTML = '<div class="no-data">这只鸡跑丢了，请回鸡场重新抓一只</div>';
     return;
   }
 
@@ -244,9 +254,13 @@ function renderDetail(data) {
 
   navTitle.textContent = (f.name || '基金详情');
 
+  // 稀有度（游戏化）
+  const rarity = getChickenRarity(m.r3y);
+
   // 标签
   const tags = [
-    `<span class="dh-tag dh-tag-blind">盲盒抽取</span>`,
+    `<span class="dh-tag dh-tag-rarity ${rarity.key}">${rarity.label}</span>`,
+    `<span class="dh-tag dh-tag-blind">随机抓鸡</span>`,
     `<span class="dh-tag dh-tag-type">${esc(f.type || '--')}</span>`,
   ];
   if (data.usedDefaults && Object.keys(data.usedDefaults).length) {
@@ -261,7 +275,7 @@ function renderDetail(data) {
   if (r) {
     reasonHtml = `
       <div class="reason-block"><h3>为什么是它</h3><ul>${listHtml(r.whyThis)}</ul></div>
-      <div class="reason-block"><h3>为什么不是收益榜首</h3><ul>${listHtml(r.notOthers, '盲盒在初筛池中随机会摇出，并非单纯押注收益榜首。')}</ul></div>
+      <div class="reason-block"><h3>为什么不是收益榜首</h3><ul>${listHtml(r.notOthers, '这只鸡是从鸡舍里随机抓的，并非单纯押注收益榜首。')}</ul></div>
       <div class="reason-block"><h3>这只基金的短板</h3><ul>${listHtml(r.shortBoard, '任何基金均有波动风险，历史业绩不代表未来。')}</ul></div>
       <div class="reason-block">
         <h3>适合谁 / 不适合谁</h3>
@@ -280,10 +294,11 @@ function renderDetail(data) {
   wrap.innerHTML = `
     <!-- 基金头部 -->
     <div class="detail-header">
+      <div class="dh-chicken">${rarity.emoji}</div>
       <div class="dh-tags">${tags.join('')}</div>
       <div class="dh-name">${esc(f.name || '未知基金')}</div>
       <div class="dh-code">${esc(f.code || '')} · 数据源：${esc(data.dataSource || '未知')}</div>
-      ${r ? `<div class="dh-opening">🎯 ${esc(r.opening)}</div>` : ''}
+      ${r ? `<div class="dh-opening">🐣 ${esc(r.opening)}</div>` : ''}
       ${r ? `<div class="dh-oneliner">${esc(r.oneLiner)}</div>` : ''}
     </div>
 
@@ -315,15 +330,15 @@ function renderDetail(data) {
 
     <!-- 操作栏 -->
     <div class="detail-actions">
-      <button class="d-action-btn d-action-ghost" id="backBtnBottom">← 返回抽签</button>
-      <button class="d-action-btn d-action-primary" id="redrawBtn">🎰 再求一次</button>
+      <button class="d-action-btn d-action-ghost" id="backBtnBottom">← 返回鸡场</button>
+      <button class="d-action-btn d-action-primary" id="redrawBtn">🐔 再抓一只</button>
     </div>
 
     <!-- 免责声明 -->
     <div class="disclaimer">
-      本页面由「求一基」根据公开数据快照与 AI 模型生成，
+      本报告由「求一鸡」根据公开数据快照与 AI 模型生成，
       仅供娱乐与研究参考，<b>不构成任何投资建议</b>。
-      基金过往业绩不代表未来表现，投资需谨慎。
+      基金过往业绩不代表未来表现，养鸡有风险，投资需谨慎。
     </div>
   `;
 
@@ -362,6 +377,6 @@ function goBack() {
     sessionStorage.removeItem('fundDetailData');
   } catch (e) {
     console.error('detail init error:', e);
-    $('#detailContent').innerHTML = '<div class="no-data">数据解析失败，请返回重新抽签</div>';
+    $('#detailContent').innerHTML = '<div class="no-data">数据解析失败，请回鸡场重新抓一只</div>';
   }
 })();

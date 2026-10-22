@@ -1,5 +1,5 @@
 /* ============================================
-   求一基 · 选基攻略模块
+   求一鸡 · 养鸡攻略模块
    策略盘点 → 信息补充 → 调用大模型生成选基方案
    依赖 app.js 中的 showToast / escapeHtml
    ============================================ */
@@ -142,7 +142,7 @@
           <div class="stg-sec"><h4>适合谁</h4><p>${esc(s.suitable)}</p></div>
           <div class="stg-sec"><h4>不适合谁</h4><p>${esc(s.notSuitable)}</p></div>
           ${s.tips ? `<div class="stg-tips">&#128161; ${esc(s.tips)}</div>` : ''}
-          <button class="stg-use-btn" data-use="${esc(s.id)}">&#10024; 用这套策略帮我选基</button>
+          <button class="stg-use-btn" data-use="${esc(s.id)}">&#10024; 用这套策略帮我挑鸡</button>
         </div>
       </article>`).join('');
 

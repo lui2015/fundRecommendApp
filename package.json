@@ -2,7 +2,7 @@
   "name": "fundRecommendApp",
   "version": "0.1.0",
   "private": true,
-  "description": "求一基 · 趣味抽签基金推荐工具",
+  "description": "求一鸡 · 养基场趣味抓鸡基金推荐工具",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

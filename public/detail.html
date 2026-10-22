@@ -3,72 +3,90 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>基金详情 · 求一基</title>
-<link rel="stylesheet" href="style.css?v=2026080716"/>
+<title>鸡的体检报告 · 求一鸡</title>
+<link rel="stylesheet" href="style.css?v=2026102201"/>
 <style>
   .detail-page {
-    min-height: 100vh; background: var(--bg); color: var(--text);
+    min-height: 100vh; color: var(--text);
     padding-bottom: 48px;
+    background:
+      radial-gradient(circle at 16% 4%, #fffaea 0%, transparent 42%),
+      radial-gradient(circle at 86% 2%, #ffeecc 0%, transparent 40%),
+      linear-gradient(180deg, #fff9e8 0%, #fdf2d6 50%, #f8ecc8 100%);
   }
   /* 顶部导航 */
   .detail-nav {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(7,7,13,.92); backdrop-filter: blur(12px);
+    background: rgba(255, 251, 240, .94); backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 12px 20px; display: flex; align-items: center; gap: 14px;
   }
   .back-btn {
     width: 36px; height: 36px; border-radius: 50%;
-    border: 1px solid var(--border); background: rgba(255,255,255,.04);
+    border: 1.5px solid var(--border); background: #fff;
     color: var(--text2); font-size: 18px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all .2s; flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
   }
-  .back-btn:hover { border-color: var(--red); color: var(--red); }
-  .nav-title { font-size: 15px; font-weight: 700; color: var(--text2);
+  .back-btn:hover { border-color: var(--gold); color: var(--red); }
+  .nav-title { font-size: 15px; font-weight: 800; color: var(--text2);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* 内容区 */
   .detail-wrap { max-width: 640px; margin: 0 auto; padding: 20px 16px 0; }
 
   /* 基金头部卡片 */
-  .detail-header { text-align: center; padding: 28px 20px 24px; }
+  .detail-header { text-align: center; padding: 24px 20px 20px; }
+  .dh-chicken { font-size: 46px; line-height: 1; margin-bottom: 8px;
+    filter: drop-shadow(0 8px 10px rgba(190,155,95,.28));
+    animation: dhChicken 2.4s ease-in-out infinite; }
+  @keyframes dhChicken {
+    0%,100% { transform: translateY(0) rotate(-4deg); }
+    50%     { transform: translateY(-7px) rotate(4deg); }
+  }
   .dh-tags { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .dh-tag {
-    font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 999px;
-    letter-spacing: .5px;
+    font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 999px;
+    letter-spacing: .3px;
   }
-  .dh-tag-blind { background: rgba(230,57,70,.14); color: var(--red); border: 1px solid rgba(230,57,70,.25); }
-  .dh-tag-type { background: rgba(240,193,75,.1); color: var(--gold); border: 1px solid rgba(240,193,75,.22); }
-  .dh-tag-warn { background: rgba(240,193,75,.08); color: #c9a03a; border: 1px solid rgba(201,160,58,.25); }
-  .dh-name { font-size: 24px; font-weight: 800; line-height: 1.3; margin-bottom: 6px; }
+  .dh-tag-blind { background: #fff1e8; color: var(--red); border: 1px solid #fbd8c4; }
+  .dh-tag-type { background: #fff5e2; color: #c47d18; border: 1px solid #f4dfb6; }
+  .dh-tag-warn { background: #fff8e8; color: #b8860b; border: 1px solid #f5e3bd; }
+  .dh-tag-rarity { color: #fff; border: 1px solid transparent; }
+  .dh-tag-rarity.ssr { background: linear-gradient(135deg, #ff9d3d, #f2703c); box-shadow: 0 3px 10px rgba(242,112,60,.3); }
+  .dh-tag-rarity.sr  { background: linear-gradient(135deg, #f6b73c, #e09a1c); box-shadow: 0 3px 10px rgba(224,154,28,.26); }
+  .dh-tag-rarity.r   { background: linear-gradient(135deg, #7fc99a, #4fa472); box-shadow: 0 3px 10px rgba(79,164,114,.22); }
+  .dh-tag-rarity.n   { background: linear-gradient(135deg, #cdbfa6, #a9997f); }
+  .dh-name { font-size: 24px; font-weight: 900; line-height: 1.3; margin-bottom: 6px; }
   .dh-code { font-size: 13px; color: var(--text3); margin-bottom: 16px; }
   .dh-opening { font-size: 15px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
-  .dh-oneliner { font-size: 17px; font-weight: 700; color: var(--red); line-height: 1.5; }
+  .dh-oneliner { font-size: 17px; font-weight: 800; color: var(--red); line-height: 1.5; }
 
   /* 区块 */
   .detail-section {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 20px; margin-bottom: 16px;
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 18px; padding: 20px; margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
   }
   .section-title {
-    font-size: 15px; font-weight: 800; color: var(--text);
-    border-left: 3px solid var(--red); padding-left: 10px;
+    font-size: 15px; font-weight: 900; color: var(--text);
+    border-left: 4px solid var(--red); padding-left: 10px;
     margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
   }
   .section-title .num {
-    font-size: 12px; color: var(--red); font-weight: 400;
+    font-size: 12px; color: var(--red); font-weight: 700;
   }
 
   /* 指标表 */
   .metrics-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .metrics-table td {
-    padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.05);
+    padding: 9px 10px; border-bottom: 1px dashed #f4e8ce;
   }
   .metrics-table td:first-child { color: var(--text3); width: 46%; }
   .metrics-table tr:last-child td { border-bottom: none; }
-  .val-pos { color: var(--red); font-weight: 700; }
-  .val-neg { color: #2ecc71; font-weight: 700; }
+  .val-pos { color: var(--red); font-weight: 800; }
+  .val-neg { color: var(--green); font-weight: 800; }
 
   /* 图表容器 */
   .chart-wrap { overflow-x: auto; padding: 4px 0; -webkit-overflow-scrolling: touch; }
@@ -78,18 +96,18 @@
   .reason-block { margin-bottom: 18px; }
   .reason-block:last-child { margin-bottom: 0; }
   .reason-block h3 {
-    font-size: 14px; font-weight: 800; color: var(--gold);
+    font-size: 14px; font-weight: 900; color: #c47d18;
     margin-bottom: 8px;
   }
   .reason-block ul { list-style: none; padding: 0; margin: 0; }
   .reason-block li {
-    font-size: 13px; color: var(--text2); line-height: 1.65;
+    font-size: 13px; color: var(--text2); line-height: 1.7;
     padding: 4px 0 4px 18px; position: relative;
   }
   .reason-block li::before {
-    content: '•'; position: absolute; left: 4px; color: var(--text3);
+    content: '•'; position: absolute; left: 4px; color: #e8c382;
   }
-  .reason-block p { font-size: 13px; color: var(--text2); line-height: 1.65; margin: 4px 0; }
+  .reason-block p { font-size: 13px; color: var(--text2); line-height: 1.7; margin: 4px 0; }
   .reason-label { font-size: 12px; color: var(--text3); margin-top: 8px; }
 
   /* 底部操作栏 */
@@ -97,36 +115,36 @@
     display: flex; gap: 12px; margin-top: 20px;
   }
   .d-action-btn {
-    flex: 1; height: 44px; border-radius: 12px; border: none;
-    font-size: 14px; font-weight: 700; cursor: pointer;
+    flex: 1; height: 46px; border-radius: 14px; border: none;
+    font-size: 14px; font-weight: 800; cursor: pointer;
     transition: all .2s; display: flex; align-items: center;
     justify-content: center; gap: 6px;
   }
   .d-action-ghost {
-    background: transparent; border: 1px solid var(--border);
-    color: var(--text2);
+    background: #fff; border: 1.5px solid var(--border);
+    color: var(--text2); box-shadow: var(--shadow-sm);
   }
-  .d-action-ghost:hover { border-color: var(--text3); color: var(--text); }
+  .d-action-ghost:hover { border-color: var(--gold); color: var(--red); }
   .d-action-primary {
-    background: linear-gradient(135deg, var(--red), #c0392b);
-    color: #fff; box-shadow: 0 4px 16px rgba(230,57,70,.3);
+    background: linear-gradient(135deg, #ffab3d, var(--red));
+    color: #fff; box-shadow: 0 8px 20px rgba(242,112,60,.3);
   }
-  .d-action-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(230,57,70,.4); }
+  .d-action-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(242,112,60,.36); }
 
   /* 免责声明 */
   .disclaimer {
-    font-size: 11px; color: var(--text3); line-height: 1.6;
-    border-top: 1px dashed rgba(255,255,255,.08);
+    font-size: 11px; color: var(--text3); line-height: 1.7;
+    border-top: 1px dashed #f0e2c2;
     margin-top: 20px; padding-top: 14px;
   }
 
   /* 基金经理卡片 */
   .mgr-list { display: flex; flex-direction: column; gap: 10px; }
   .mgr-card {
-    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
-    border-radius: 10px; padding: 12px 14px;
+    background: #fffaf0; border: 1.5px solid #f4e8ce;
+    border-radius: 14px; padding: 12px 14px;
   }
-  .mgr-name { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .mgr-name { font-size: 15px; font-weight: 900; color: var(--text); margin-bottom: 4px; }
   .mgr-meta { font-size: 12px; color: var(--text3); line-height: 1.7; }
 
   /* 资产/行业配置条形 */
@@ -140,28 +158,28 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .asset-bar-wrap {
-    flex: 1; height: 18px; background: rgba(255,255,255,.04);
-    border-radius: 4px; overflow: hidden; position: relative;
+    flex: 1; height: 18px; background: #faf3e3;
+    border-radius: 999px; overflow: hidden; position: relative;
   }
   .asset-bar {
-    height: 100%; border-radius: 4px;
-    background: linear-gradient(90deg, var(--red), #c0392b); opacity:.85;
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #ffab3d, var(--red));
     transition: width .5s ease;
   }
   .ind-bar {
-    background: linear-gradient(90deg, var(--gold), #c9a03a); opacity:.85;
+    background: linear-gradient(90deg, #ffd28a, var(--gold));
   }
-  .asset-pct { width: 48px; flex-shrink: 0; text-align: right; color: var(--text2); font-weight: 700; }
+  .asset-pct { width: 48px; flex-shrink: 0; text-align: right; color: var(--text2); font-weight: 800; }
 
   /* 持仓表 */
-  .hold-table th { color: var(--text3); font-size: 11px; font-weight: 600; text-align: left; padding-bottom: 6px; }
+  .hold-table th { color: var(--text3); font-size: 11px; font-weight: 700; text-align: left; padding-bottom: 6px; }
   .hold-code { color: var(--text3); font-family: var(--font-mono); font-size: 12px; }
 
   /* 持仓代码标签 */
   .hold-code-tag {
-    font-family: var(--font-mono); font-size: 12px; padding: 3px 8px;
-    border-radius: 6px; background: rgba(230,57,70,.08);
-    color: var(--red); border: 1px solid rgba(230,57,70,.15);
+    font-family: var(--font-mono); font-size: 12px; padding: 3px 9px;
+    border-radius: 999px; background: #fff1e8;
+    color: var(--red); border: 1px solid #fbd8c4;
   }
 
   /* 无数据兜底 */
@@ -173,14 +191,14 @@
   <!-- 导航 -->
   <nav class="detail-nav">
     <button class="back-btn" id="backBtn" aria-label="返回">←</button>
-    <span class="nav-title" id="navTitle">基金详情</span>
+    <span class="nav-title" id="navTitle">鸡的体检报告</span>
   </nav>
 
   <div class="detail-wrap" id="detailContent">
-    <div class="no-data">加载中…</div>
+    <div class="no-data">正在给鸡做体检…</div>
   </div>
 </div>
 
-<script src="detail.js?v=2026080719"></script>
+<script src="detail.js?v=2026102201"></script>
 </body>
 </html>

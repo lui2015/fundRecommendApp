@@ -25,13 +25,13 @@ function buildChart(fund) {
   rows.forEach(([label, v], i) => {
     const y = 5 + i * (barH + gap);
     const len = (Math.abs(v) / max) * ((w - labelW) / 2 - 10);
-    const color = v >= 0 ? '#e63946' : '#2a9d8f';
+    const color = v >= 0 ? '#f2703c' : '#3fa96b';
     const x = v >= 0 ? zeroX - len : zeroX;
-    bars += `<text x="0" y="${y + barH / 2 + 4}" font-size="12" fill="#333">${label}</text>`;
+    bars += `<text x="0" y="${y + barH / 2 + 4}" font-size="12" fill="#8b7a60">${label}</text>`;
     bars += `<rect x="${x}" y="${y}" width="${len}" height="${barH}" rx="3" fill="${color}"/>`;
     bars += `<text x="${v >= 0 ? x - 6 : x + len + 6}" y="${y + barH / 2 + 4}" font-size="12" fill="${color}" text-anchor="${v >= 0 ? 'end' : 'start'}">${v}%</text>`;
   });
-  bars += `<line x1="${zeroX}" y1="2" x2="${zeroX}" y2="${h - 4}" stroke="#bbb" stroke-width="1"/>`;
+  bars += `<line x1="${zeroX}" y1="2" x2="${zeroX}" y2="${h - 4}" stroke="#e6d7b8" stroke-width="1"/>`;
   return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="业绩走势">${bars}</svg>`;
 }
 
@@ -42,7 +42,7 @@ function listHtml(arr, fallbackText) {
 
 function generateReport({ id, createdAt, fund, fundType, metrics, reason, userConstraints, usedDefaults, dataSource }) {
   const r = reason && reason.structured ? reason.structured : null;
-  const opening = r ? r.opening : '🎉 为你摇出的基金详情';
+  const opening = r ? r.opening : '🐔 为你抓到的基金详情';
   const oneLiner = r ? r.oneLiner : (fund.name || '');
   const whyThis = r ? r.whyThis : [];
   const notOthers = r ? r.notOthers : [];
@@ -65,25 +65,26 @@ function generateReport({ id, createdAt, fund, fundType, metrics, reason, userCo
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>求一基 · ${esc(fund.name)}（${esc(fund.code)}）推荐详情</title>
+<title>求一鸡 · ${esc(fund.name)}（${esc(fund.code)}）体检报告</title>
 <style>
-  :root{ --red:#e63946; --green:#2a9d8f; --ink:#222; --muted:#777; --line:#eee; }
+  :root{ --red:#f2703c; --green:#3fa96b; --gold:#f6b73c; --ink:#4a3b26; --muted:#8b7a60; --line:#f2e5c8; }
   *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#f7f8fa;line-height:1.6}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);line-height:1.65;
+    background:radial-gradient(circle at 16% 4%,#fffaea 0%,transparent 42%),linear-gradient(180deg,#fff9e8 0%,#fdf2d6 50%,#f8ecc8 100%);min-height:100vh}
   .wrap{max-width:720px;margin:0 auto;padding:20px 16px 48px}
-  .card{background:#fff;border-radius:14px;padding:18px 18px;margin:14px 0;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-  h1{font-size:22px;margin:0 0 4px}
+  .card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:18px 18px;margin:14px 0;box-shadow:0 6px 20px rgba(190,155,95,.14)}
+  h1{font-size:22px;margin:0 0 4px;font-weight:800}
   .code{color:var(--muted);font-size:13px}
-  .tag{display:inline-block;background:#fff3f3;color:var(--red);border-radius:999px;padding:2px 10px;font-size:12px;margin-right:6px}
-  .one{font-size:16px;font-weight:600;margin:10px 0}
-  h2{font-size:16px;border-left:4px solid var(--red);padding-left:8px;margin:18px 0 8px}
+  .tag{display:inline-block;background:#fff1e8;color:var(--red);border:1px solid #fbd8c4;border-radius:999px;padding:2px 10px;font-size:12px;margin-right:6px;font-weight:700}
+  .one{font-size:16px;font-weight:700;margin:10px 0}
+  h2{font-size:16px;color:var(--ink);border-left:4px solid var(--red);padding-left:8px;margin:18px 0 8px;font-weight:800}
   ul{margin:6px 0;padding-left:20px}
-  li{margin:4px 0}
+  li{margin:4px 0;color:#6b5c45}
   table{width:100%;border-collapse:collapse;font-size:13px}
-  td{padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:6px 8px;border-bottom:1px dashed var(--line)}
   td:first-child{color:var(--muted);width:42%}
-  .pos{color:var(--red)} .neg{color:var(--green)}
-  .note{color:#b26a00;font-size:13px;background:#fff8ec;padding:8px 10px;border-radius:8px}
+  .pos{color:var(--red);font-weight:700} .neg{color:var(--green);font-weight:700}
+  .note{color:#9a6c14;font-size:13px;background:#fff8e4;border-left:3px solid var(--gold);padding:8px 10px;border-radius:0 10px 10px 0}
   .disclaimer{font-size:12px;color:var(--muted);border-top:1px dashed var(--line);margin-top:18px;padding-top:10px}
   .meta{font-size:12px;color:var(--muted)}
 </style>
@@ -91,7 +92,7 @@ function generateReport({ id, createdAt, fund, fundType, metrics, reason, userCo
 <body>
 <div class="wrap">
   <div class="card">
-    <span class="tag">盲盒抽取</span><span class="tag">${esc(fundType)}</span>
+    <span class="tag">随机抓鸡</span><span class="tag">${esc(fundType)}</span>
     <h1>${esc(fund.name)}</h1>
     <div class="code">基金代码 ${esc(fund.code)} ｜ 数据来源：${esc(dataSource || '未知')}</div>
     <div class="one">${esc(opening)}</div>
@@ -118,7 +119,7 @@ function generateReport({ id, createdAt, fund, fundType, metrics, reason, userCo
     <h2>③ 为什么是它</h2>
     <ul>${listHtml(whyThis, '暂无')}</ul>
     <h2>④ 为什么不是别的（反排行榜）</h2>
-    <ul>${listHtml(notOthers, '盲盒在初筛池中随机会摇出，并非单纯押注收益榜首。')}</ul>
+    <ul>${listHtml(notOthers, '这只鸡是从鸡舍里随机抓的，并非单纯押注收益榜首。')}</ul>
     <h2>⑤ 这只基金的短板</h2>
     <ul>${listHtml(shortBoard, '任何基金均有波动风险，历史业绩不代表未来。')}</ul>
   </div>
@@ -135,7 +136,7 @@ function generateReport({ id, createdAt, fund, fundType, metrics, reason, userCo
   <div class="disclaimer">
     <p>用户约束：${esc(constraintsText)}</p>
     <p>保存编号 #${esc(id)} ｜ 生成时间：${esc(createdAt)} ｜ 数据源：${esc(dataSource || '未知')}</p>
-    <p>本页面由「求一基」根据公开数据快照与模型生成，仅供娱乐与研究参考，<b>不构成任何投资建议</b>。基金过往业绩不代表未来表现，投资需谨慎。</p>
+    <p>本页面由「求一鸡」根据公开数据快照与模型生成，仅供娱乐与研究参考，<b>不构成任何投资建议</b>。基金过往业绩不代表未来表现，养鸡有风险，投资需谨慎。</p>
   </div>
 </div>
 </body>
